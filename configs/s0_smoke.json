@@ -1,0 +1,33 @@
+{
+  "scenario": "S0_single_edge_two_turns",
+  "seed": 42,
+  "edge": {
+    "id": "E1",
+    "gpu_work_per_second": 10.0,
+    "kv_capacity_bytes": 100
+  },
+  "model": {
+    "id": "synthetic-model",
+    "prefill_work_per_token": 1.0,
+    "decode_work_per_token": 2.0,
+    "kv_bytes_per_token": 4,
+    "context_window_tokens": 20,
+    "output_limit_per_turn": 4
+  },
+  "network": {
+    "wireless_up_bits_per_second": 80.0,
+    "wireless_down_bits_per_second": 80.0,
+    "text_bytes_per_token": 1
+  },
+  "session": {
+    "id": "S1",
+    "model_id": "synthetic-model",
+    "priority": "L",
+    "access_edge_id": "E1",
+    "execution_edge_id": "E1",
+    "turns": [
+      {"input_tokens": 2, "output_tokens": 1},
+      {"input_tokens": 2, "output_tokens": 1}
+    ]
+  }
+}
