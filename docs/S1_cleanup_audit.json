@@ -1,0 +1,171 @@
+{
+  "old_tests": 110,
+  "final_tests": 118,
+  "removed_test_ids": [
+    "test_package_layout.PackageLayoutTests.test_legacy_and_canonical_imports_share_definitions",
+    "test_s1e.S1EEntityTests.test_legacy_fixed_access_loads_but_change_rejected_at_reveal"
+  ],
+  "added_test_ids": [
+    "test_cleanup.CleanupTests.test_delivery_requires_explicit_nonnull_identity_without_mutation",
+    "test_cleanup.CleanupTests.test_future_arrival_access_does_not_change_prefix",
+    "test_cleanup.CleanupTests.test_rejected_turnplan_access_argument",
+    "test_cleanup.CleanupTests.test_repeated_commit_does_not_duplicate_output_identity",
+    "test_cleanup.CleanupTests.test_s0_future_turn_access_rejected_at_loading",
+    "test_cleanup.CleanupTests.test_turn_access_rejected_even_when_equal_to_initial",
+    "test_cleanup.CleanupTests.test_turn_result_has_only_unambiguous_submission_access",
+    "test_package_layout.PackageLayoutTests.test_canonical_definitions_unique_and_importable",
+    "test_package_layout.PackageLayoutTests.test_removed_forwarding_modules_are_not_importable",
+    "test_s1e.S1EEntityTests.test_per_turn_access_is_rejected_for_all_turns"
+  ],
+  "inventory": {
+    "src/replacement": [
+      "src/replacement/cli.py",
+      "src/replacement/__init__.py",
+      "src/replacement/core/entities.py",
+      "src/replacement/core/observation.py",
+      "src/replacement/core/runtime.py",
+      "src/replacement/core/workload.py",
+      "src/replacement/core/__init__.py",
+      "src/replacement/demos/gpu_demo.py",
+      "src/replacement/demos/gpu_queue_demo.py",
+      "src/replacement/demos/kv_demo.py",
+      "src/replacement/demos/serving_demo.py",
+      "src/replacement/demos/__init__.py",
+      "src/replacement/resources/compute.py",
+      "src/replacement/resources/gpu.py",
+      "src/replacement/resources/gpu_queue.py",
+      "src/replacement/resources/kv.py",
+      "src/replacement/resources/__init__.py",
+      "src/replacement/simulation/events.py",
+      "src/replacement/simulation/s0.py",
+      "src/replacement/simulation/serving.py",
+      "src/replacement/simulation/__init__.py"
+    ],
+    "tests": [
+      "tests/test_cleanup.py",
+      "tests/test_foundation.py",
+      "tests/test_gpu.py",
+      "tests/test_gpu_queue.py",
+      "tests/test_kv.py",
+      "tests/test_package_layout.py",
+      "tests/test_s0.py",
+      "tests/test_s1e.py",
+      "tests/test_serving.py",
+      "tests/test_turn_gpu.py"
+    ],
+    "configs": [
+      "configs/s0_smoke.json",
+      "configs/s1a_gpu_smoke.json",
+      "configs/s1b_gpu_queue_smoke.json",
+      "configs/s1c_kv_smoke.json",
+      "configs/s1d_blocked.json",
+      "configs/s1d_normal.json",
+      "configs/s1d_queue.json",
+      "configs/s1d_recover.json"
+    ],
+    "scripts": [
+      "scripts/verify_s1e.py"
+    ]
+  },
+  "unique_source_classes": {
+    "ModelSpec": "src/replacement/core/entities.py",
+    "Phase": "src/replacement/core/entities.py",
+    "CommitResult": "src/replacement/core/entities.py",
+    "OutputToken": "src/replacement/core/entities.py",
+    "TurnState": "src/replacement/core/entities.py",
+    "SessionState": "src/replacement/core/entities.py",
+    "EdgeState": "src/replacement/core/entities.py",
+    "TaskObservation": "src/replacement/core/observation.py",
+    "TurnObservation": "src/replacement/core/observation.py",
+    "SessionObservation": "src/replacement/core/observation.py",
+    "EdgeObservation": "src/replacement/core/observation.py",
+    "OnlineObservation": "src/replacement/core/observation.py",
+    "RuntimeState": "src/replacement/core/runtime.py",
+    "TurnPlan": "src/replacement/core/workload.py",
+    "SessionPlan": "src/replacement/core/workload.py",
+    "WorkloadPlan": "src/replacement/core/workload.py",
+    "RevealedRequest": "src/replacement/core/workload.py",
+    "WorkloadDriver": "src/replacement/core/workload.py",
+    "_UnitTiming": "src/replacement/resources/compute.py",
+    "GPUComputeTask": "src/replacement/resources/compute.py",
+    "ComputeRegistry": "src/replacement/resources/compute.py",
+    "TaskSnapshot": "src/replacement/resources/gpu.py",
+    "GPUCompletion": "src/replacement/resources/gpu.py",
+    "_Task": "src/replacement/resources/gpu.py",
+    "EqualShareGPU": "src/replacement/resources/gpu.py",
+    "QueuedTaskSnapshot": "src/replacement/resources/gpu_queue.py",
+    "_ReadyRecord": "src/replacement/resources/gpu_queue.py",
+    "GPUQueue": "src/replacement/resources/gpu_queue.py",
+    "PendingCommit": "src/replacement/resources/kv.py",
+    "TokenCommitted": "src/replacement/resources/kv.py",
+    "KVResource": "src/replacement/resources/kv.py",
+    "Event": "src/replacement/simulation/events.py",
+    "EventQueue": "src/replacement/simulation/events.py",
+    "S0Simulator": "src/replacement/simulation/s0.py",
+    "ServingSimulator": "src/replacement/simulation/serving.py"
+  },
+  "historical_traces_equal_except_removed_turn_alias": {
+    "normal": {
+      "summary": true,
+      "turns": true,
+      "sessions": true,
+      "resources": true,
+      "gpu_events": true,
+      "kv_events": true,
+      "events": true
+    },
+    "queue": {
+      "summary": true,
+      "turns": true,
+      "sessions": true,
+      "resources": true,
+      "gpu_events": true,
+      "kv_events": true,
+      "events": true
+    },
+    "recover": {
+      "summary": true,
+      "turns": true,
+      "sessions": true,
+      "resources": true,
+      "gpu_events": true,
+      "kv_events": true,
+      "events": true
+    },
+    "blocked": {
+      "summary": true,
+      "turns": true,
+      "sessions": true,
+      "resources": true,
+      "gpu_events": true,
+      "kv_events": true,
+      "events": true
+    }
+  },
+  "deleted_paths": [
+    "src/replacement/compute.py",
+    "src/replacement/entities.py",
+    "src/replacement/events.py",
+    "src/replacement/gpu.py",
+    "src/replacement/gpu_demo.py",
+    "src/replacement/gpu_queue.py",
+    "src/replacement/gpu_queue_demo.py",
+    "src/replacement/observation.py",
+    "src/replacement/s0.py",
+    "src/replacement/workload.py"
+  ],
+  "unchanged_resource_files": {
+    "src/replacement/resources/compute.py": true,
+    "src/replacement/resources/gpu.py": true,
+    "src/replacement/resources/gpu_queue.py": true,
+    "src/replacement/resources/__init__.py": true
+  },
+  "configs_unchanged": true,
+  "all_resource_source_files_unchanged": {
+    "src/replacement/resources/compute.py": true,
+    "src/replacement/resources/gpu.py": true,
+    "src/replacement/resources/gpu_queue.py": true,
+    "src/replacement/resources/kv.py": true,
+    "src/replacement/resources/__init__.py": true
+  }
+}

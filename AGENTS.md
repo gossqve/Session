@@ -1,12 +1,12 @@
 # Rules for Codex / coding agents
 
-Project: **Stateful AI Session Re-placement**, latest model dated 2026-11-02/03.
+Project: **Stateful AI Session Re-placement**, final Section III dated 2026-11-06 (including reachability supplement), with the user's no-priority/causal S1-E override recorded in `docs/model_spec/README.md`.
 
-1. Read the authoritative model files in `docs/model_spec/` when they are available. Prefer the user's latest integrated Section III when conflicts occur; document unresolved ambiguities rather than changing the model.
-2. Implement only the explicitly requested development stage. Current implemented scope: **S0 single Edge, single Session, deterministic synthetic workload, zero Idle**.
+1. Read `docs/model_spec/开发建模注意.md` and the authoritative model files. The user's latest development rules remove Session service priorities and require causal observations; otherwise prefer integrated Section III. Document unresolved ambiguities rather than changing the model.
+2. Implement only the requested stage. Current S1 cleanup uses canonical core/resources/simulation/demos modules exclusively; removed root forwarding modules must not be restored. Formal serving retains Turn-level GPU slots/FCFS/Equal-Share, KV atomic commits/block/recovery, independent wireless FIFO, zero Idle and full E2E. Fixed Access=Execution only. Reject every per-Turn Access config at loading; TurnPlan contains input/hidden output only. Session initial/current Access, Turn submitted_access_edge_id and frozen OutputToken provenance remain distinct. Runtime.deliver_token requires an explicit token_id; Turn results have no ambiguous access_edge_id alias. Turn.delivered remains the sole delivery prefix. Resolve retained unit boundaries at the same clock; never requeue continuously computing Turns per Token. Keep the useful low-level atomic GPU APIs and S0 lifecycle/safety validation. No H/L, preemption, old selector, Network/Mobility/Handover/Migration/policies. See docs/S1_cleanup_report.md; S1-E and earlier reports are historical stage records.
 3. Keep simulator/environment mechanics separate from policies. Never let future session turns, future access changes, actual remaining outputs or future events leak into policy observations.
 4. Don't add penalties for migration bytes, budgets, a context reset, resident-session caps or idle/offload without approval.
-5. Do not describe S0's single-user radio scheduler as the final wired Max-Min network scheduler or GPU Processor Sharing; both are future modules.
+5. Do not describe S0's single-user radio scheduler as the final wired Max-Min network scheduler or GPU Processor Sharing. S1-A GPU Processor Sharing is a separate implemented resource; wired Max-Min remains future work.
 6. Validate units, token/KV accounting, deterministic tie-breaking, end-to-end Turn completion, and event progress with tests.
 7. Don't claim tests passed until actually run, and report the exact commands and results.
 8. Keep credentials, SSH config, joblib artifacts, model weights, private data and large runs out of Git. No external code copy without source/license checks.

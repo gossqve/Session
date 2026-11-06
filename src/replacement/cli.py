@@ -4,7 +4,7 @@ import csv
 import json
 from pathlib import Path
 
-from .s0 import S0Simulator
+from .simulation.s0 import S0Simulator
 
 
 def run_cli() -> None:
@@ -13,6 +13,7 @@ def run_cli() -> None:
     parser.add_argument("--out", required=True, type=Path)
     args = parser.parse_args()
     config = json.loads(args.config.read_text(encoding="utf-8"))
+    # Full config is an offline reproducibility artifact, never a policy observation.
     summary, turns, events = S0Simulator(config).run()
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "config.json").write_text(json.dumps(config, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

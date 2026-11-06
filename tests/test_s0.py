@@ -7,8 +7,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-from replacement.events import EventQueue  # noqa: E402
-from replacement.s0 import S0Simulator  # noqa: E402
+from replacement.simulation.events import EventQueue  # noqa: E402
+from replacement.simulation.s0 import S0Simulator  # noqa: E402
 
 BASE = json.loads((ROOT / "configs/s0_smoke.json").read_text(encoding="utf-8"))
 
@@ -57,14 +57,29 @@ class S0Tests(unittest.TestCase):
     def test_unsafe_capacity_rejected_without_fake_success(self):
         cfg = copy.deepcopy(BASE)
         cfg["edge"]["kv_capacity_bytes"] = 20
-        with self.assertRaisesRegex(ValueError, "capacity"):
-            S0Simulator(cfg)
+        simulator = S0Simulator(cfg)  # future KV demand no longer rejects arrival
+        summary, turns, events = simulator.run()
+        self.assertEqual(summary["completed_turns"], 1)
+        self.assertEqual(summary["termination_reason"], "KVBlocked")
+        self.assertIsNone(summary["mean_full_turn_e2e_s"])
+        self.assertEqual(summary["final_context_tokens"], 5)
+        self.assertEqual(summary["released_authoritative_kv_bytes"], 20)
+        self.assertEqual(simulator.active_turn.partial_work, 2)
+        self.assertEqual(simulator.active_turn.decode_done, 0)
+        self.assertEqual(simulator.edge.running_tasks, ())
+        self.assertTrue(any(e["event"] == "kv_blocked" for e in events))
 
     def test_context_window_is_across_all_turns(self):
         cfg = copy.deepcopy(BASE)
         cfg["model"]["context_window_tokens"] = 5
-        with self.assertRaisesRegex(ValueError, "cumulative context"):
-            S0Simulator(cfg)
+        summary, turns, events = S0Simulator(cfg).run()
+        self.assertEqual(summary["completed_turns"], 1)
+        self.assertEqual(summary["termination_reason"], "ContextLimit")
+        self.assertIsNone(summary["mean_full_turn_e2e_s"])
+        self.assertEqual(summary["final_context_tokens"], 5)
+        self.assertEqual(summary["peak_authoritative_kv_bytes"], 20)
+        self.assertEqual(summary["released_authoritative_kv_bytes"], 0)
+        self.assertTrue(any(e["event"] == "context_limit" for e in events))
 
     def test_stable_event_order_same_time(self):
         q = EventQueue()

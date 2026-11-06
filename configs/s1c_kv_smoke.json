@@ -1,0 +1,23 @@
+{
+  "model": {
+    "id": "synthetic-4B-kv",
+    "layers": 1,
+    "kv_heads": 1,
+    "head_dim": 1,
+    "element_bytes": 2,
+    "context_window_tokens": 100,
+    "output_limit_per_turn": 4,
+    "prefill_work_per_token": 1.0,
+    "decode_work_per_token": 2.0
+  },
+  "edge": {
+    "id": "E1",
+    "gpu_work_per_second": 10.0,
+    "gpu_slots": 1,
+    "kv_capacity_bytes": 12
+  },
+  "sessions": [
+    {"id": "S1", "input_tokens": 2, "output_tokens": 1, "delivery_delay_s": 0.5},
+    {"id": "S2", "input_tokens": 0, "output_tokens": 1, "delivery_delay_s": 0.5}
+  ]
+}

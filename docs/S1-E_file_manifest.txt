@@ -1,0 +1,40 @@
+# S1-E 本轮修改文件（13）
+AGENTS.md
+README.md
+docs/model_spec/README.md
+src/replacement/entities.py
+src/replacement/core/entities.py
+src/replacement/core/observation.py
+src/replacement/core/runtime.py
+src/replacement/core/workload.py
+src/replacement/demos/kv_demo.py
+src/replacement/demos/serving_demo.py
+src/replacement/resources/kv.py
+src/replacement/simulation/s0.py
+src/replacement/simulation/serving.py
+
+# S1-E 本轮新增文件（18）
+docs/S1-E_file_manifest.txt
+docs/S1-E_最终建模一致性审计报告.md
+docs/model_spec/2026-11-06-final/Section_III_公式与参考文献依据核对表_最终版.md
+docs/model_spec/2026-11-06-final/Section_III_完整中文系统建模_最终核查修订版.md
+docs/model_spec/2026-11-06-final/Section_III_最终一致性检查报告.md
+docs/model_spec/2026-11-06-reachability/Section_III_公式与参考文献依据核对表_最终版.md
+docs/model_spec/2026-11-06-reachability/Section_III_完整中文系统建模_最终核查修订版.md
+docs/model_spec/2026-11-06-reachability/Section_III_最终一致性检查报告.md
+docs/s1e_baseline_hashes.json
+docs/s1e_historical_trace_comparison.json
+docs/s1e_model_sources.json
+docs/s1e_new_test_output.txt
+docs/s1e_original_test_ids.json
+docs/s1e_test_output.txt
+docs/s1e_verification.json
+docs/superpowers/plans/2026-11-06-s1e.md
+scripts/verify_s1e.py
+tests/test_s1e.py
+
+# 验收脚本需要同时存在的既有 S1-D 基准（未修改；增量上传时一起核对）
+docs/s1d_verification.json
+
+# 前提：服务器已有用户验收的完整 S1-D src/tests/configs；只按相对路径新增/覆盖，不删除旧文件。
+# 不上传 runs、缓存、环境、凭据、SSH配置、私有数据、权重或 joblib。

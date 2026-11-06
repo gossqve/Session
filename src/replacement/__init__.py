@@ -1,6 +1,7 @@
 """Deterministic, pure-software simulation components.
 
-Only S0 is currently implemented. No-op / Greedy / PPO / migration are not yet implemented.
+S1 unified serving and resource validation use canonical subpackages.
+Network / Mobility / Migration / policies are future stages.
 """
 
 __version__ = "0.0.1"

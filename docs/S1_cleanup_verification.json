@@ -1,0 +1,324 @@
+{
+  "python_version": "3.10.9",
+  "output_directory": "D:\\software\\yxyWork\\gitcode\\Session\\runs\\s1e_20261106_170243_261471",
+  "commands": [
+    {
+      "label": "cleanup_tests",
+      "argv": [
+        "D:\\software\\Anaconda\\python.exe",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_cleanup.py",
+        "-v"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "new_tests",
+      "argv": [
+        "D:\\software\\Anaconda\\python.exe",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_s1e.py",
+        "-v"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "all_tests",
+      "argv": [
+        "D:\\software\\Anaconda\\python.exe",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-v"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "s0",
+      "argv": [
+        "D:\\software\\Anaconda\\python.exe",
+        "-m",
+        "replacement.cli",
+        "--config",
+        "configs/s0_smoke.json",
+        "--out",
+        "D:\\software\\yxyWork\\gitcode\\Session\\runs\\s1e_20261106_170243_261471\\s0"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "s1a",
+      "argv": [
+        "D:\\software\\Anaconda\\python.exe",
+        "-m",
+        "replacement.demos.gpu_demo",
+        "--config",
+        "configs/s1a_gpu_smoke.json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "s1b",
+      "argv": [
+        "D:\\software\\Anaconda\\python.exe",
+        "-m",
+        "replacement.demos.gpu_queue_demo",
+        "--config",
+        "configs/s1b_gpu_queue_smoke.json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "s1c",
+      "argv": [
+        "D:\\software\\Anaconda\\python.exe",
+        "-m",
+        "replacement.demos.kv_demo",
+        "--config",
+        "configs/s1c_kv_smoke.json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "normal",
+      "argv": [
+        "D:\\software\\Anaconda\\python.exe",
+        "-m",
+        "replacement.demos.serving_demo",
+        "--config",
+        "configs/s1d_normal.json",
+        "--out",
+        "D:\\software\\yxyWork\\gitcode\\Session\\runs\\s1e_20261106_170243_261471\\normal"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "queue",
+      "argv": [
+        "D:\\software\\Anaconda\\python.exe",
+        "-m",
+        "replacement.demos.serving_demo",
+        "--config",
+        "configs/s1d_queue.json",
+        "--out",
+        "D:\\software\\yxyWork\\gitcode\\Session\\runs\\s1e_20261106_170243_261471\\queue"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "recover",
+      "argv": [
+        "D:\\software\\Anaconda\\python.exe",
+        "-m",
+        "replacement.demos.serving_demo",
+        "--config",
+        "configs/s1d_recover.json",
+        "--out",
+        "D:\\software\\yxyWork\\gitcode\\Session\\runs\\s1e_20261106_170243_261471\\recover"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "blocked",
+      "argv": [
+        "D:\\software\\Anaconda\\python.exe",
+        "-m",
+        "replacement.demos.serving_demo",
+        "--config",
+        "configs/s1d_blocked.json",
+        "--out",
+        "D:\\software\\yxyWork\\gitcode\\Session\\runs\\s1e_20261106_170243_261471\\blocked"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "legacy_smokes": {
+    "S0": {
+      "stage": "S0",
+      "scenario": "S0_single_edge_two_turns",
+      "seed": 42,
+      "planned_turns": 2,
+      "completed_turns": 2,
+      "completion_rate": 1.0,
+      "mean_full_turn_e2e_s": 0.7,
+      "observation_end_s": 1.4,
+      "final_context_tokens": 6,
+      "peak_authoritative_kv_bytes": 24,
+      "released_authoritative_kv_bytes": 0,
+      "migration_kv_bytes": 0,
+      "shadow_byte_seconds": 0,
+      "status": "ended",
+      "termination_reason": "completed",
+      "unfinished_turns": 0
+    },
+    "S1-A": {
+      "stage": "S1-A",
+      "scope": "GPU computation only",
+      "edge_id": "E1",
+      "completed_tasks": 2,
+      "completions": [
+        {
+          "task_id": "S1:T1",
+          "time_s": 1.5
+        },
+        {
+          "task_id": "S2:T1",
+          "time_s": 2.0
+        }
+      ],
+      "last_completion_s": 2.0,
+      "total_consumed_work": 20.0
+    },
+    "S1-B": {
+      "stage": "S1-B",
+      "scope": "GPU computation only",
+      "edge_id": "E1",
+      "capacity": 12.0,
+      "slots": 2,
+      "completed_tasks": 3,
+      "total_consumed_work": 36.0,
+      "last_completion_s": 3.0
+    },
+    "S1-C": {
+      "stage": "S1-C",
+      "scope": "scripted formal-entity KV recovery validation",
+      "peak_kv_bytes": 12,
+      "final_kv_bytes": 0,
+      "total_gpu_work": 6.0,
+      "gpu_units": 4,
+      "duplicate_compute": false,
+      "recovered_units": 1,
+      "completed_turns": 2,
+      "blocked_sessions": [],
+      "last_event_s": 1.3
+    }
+  },
+  "serving_smokes": {
+    "normal": {
+      "summary": {
+        "stage": "S1-D",
+        "scenario": "S1D_normal",
+        "seed": 42,
+        "planned_turns": 4,
+        "completed_turns": 4,
+        "submitted_turns": 4,
+        "unfinished_turns": 0,
+        "completion_rate": 1.0,
+        "mean_full_turn_e2e_s": 0.6,
+        "completed_turn_p95_e2e_s": 0.8,
+        "p95_scope": "normally completed Turns; nearest-rank",
+        "gpu_work": 12,
+        "gpu_queue_wait_s": 0.0,
+        "kv_blocked_time_s": 0.0,
+        "blocked_sessions": 0,
+        "peak_kv_bytes": 32,
+        "final_kv_bytes": 0,
+        "observation_end_s": 1.4,
+        "ignored_gpu_predictions": 1
+      },
+      "output_directory": "D:\\software\\yxyWork\\gitcode\\Session\\runs\\s1e_20261106_170243_261471\\normal",
+      "generated_tokens": 4,
+      "delivered_tokens": 4,
+      "recovered_units": 0,
+      "fifo_once": true
+    },
+    "queue": {
+      "summary": {
+        "stage": "S1-D",
+        "scenario": "S1D_queue",
+        "seed": 42,
+        "planned_turns": 4,
+        "completed_turns": 4,
+        "submitted_turns": 4,
+        "unfinished_turns": 0,
+        "completion_rate": 1.0,
+        "mean_full_turn_e2e_s": 0.6,
+        "completed_turn_p95_e2e_s": 0.8,
+        "p95_scope": "normally completed Turns; nearest-rank",
+        "gpu_work": 12,
+        "gpu_queue_wait_s": 0.4,
+        "kv_blocked_time_s": 0.0,
+        "blocked_sessions": 0,
+        "peak_kv_bytes": 32,
+        "final_kv_bytes": 0,
+        "observation_end_s": 1.4,
+        "ignored_gpu_predictions": 0
+      },
+      "output_directory": "D:\\software\\yxyWork\\gitcode\\Session\\runs\\s1e_20261106_170243_261471\\queue",
+      "generated_tokens": 4,
+      "delivered_tokens": 4,
+      "recovered_units": 0,
+      "fifo_once": true
+    },
+    "recover": {
+      "summary": {
+        "stage": "S1-D",
+        "scenario": "S1D_recover",
+        "seed": 42,
+        "planned_turns": 3,
+        "completed_turns": 3,
+        "submitted_turns": 3,
+        "unfinished_turns": 0,
+        "completion_rate": 1.0,
+        "mean_full_turn_e2e_s": 2.233333333333,
+        "completed_turn_p95_e2e_s": 3.2,
+        "p95_scope": "normally completed Turns; nearest-rank",
+        "gpu_work": 8,
+        "gpu_queue_wait_s": 0.1,
+        "kv_blocked_time_s": 2.5,
+        "blocked_sessions": 0,
+        "peak_kv_bytes": 20,
+        "final_kv_bytes": 0,
+        "observation_end_s": 3.6,
+        "ignored_gpu_predictions": 0
+      },
+      "output_directory": "D:\\software\\yxyWork\\gitcode\\Session\\runs\\s1e_20261106_170243_261471\\recover",
+      "generated_tokens": 5,
+      "delivered_tokens": 5,
+      "recovered_units": 1,
+      "fifo_once": true
+    },
+    "blocked": {
+      "summary": {
+        "stage": "S1-D",
+        "scenario": "S1D_blocked",
+        "seed": 42,
+        "planned_turns": 4,
+        "completed_turns": 0,
+        "submitted_turns": 2,
+        "unfinished_turns": 4,
+        "completion_rate": 0.0,
+        "mean_full_turn_e2e_s": null,
+        "completed_turn_p95_e2e_s": null,
+        "p95_scope": "normally completed Turns; nearest-rank",
+        "gpu_work": 3,
+        "gpu_queue_wait_s": 0.1,
+        "kv_blocked_time_s": 0.1,
+        "blocked_sessions": 2,
+        "peak_kv_bytes": 4,
+        "final_kv_bytes": 4,
+        "observation_end_s": 0.4,
+        "ignored_gpu_predictions": 0
+      },
+      "output_directory": "D:\\software\\yxyWork\\gitcode\\Session\\runs\\s1e_20261106_170243_261471\\blocked",
+      "generated_tokens": 0,
+      "delivered_tokens": 0,
+      "recovered_units": 0,
+      "fifo_once": true
+    }
+  },
+  "imported_module_count": 20,
+  "all_baselines_unchanged": true
+}

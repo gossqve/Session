@@ -1,0 +1,18 @@
+{
+  "moves": {
+    "entities": "core/entities",
+    "workload": "core/workload",
+    "observation": "core/observation",
+    "gpu": "resources/gpu",
+    "gpu_queue": "resources/gpu_queue",
+    "compute": "resources/compute",
+    "events": "simulation/events",
+    "s0": "simulation/s0",
+    "gpu_demo": "demos/gpu_demo",
+    "gpu_queue_demo": "demos/gpu_queue_demo"
+  },
+  "split": {
+    "entities.RuntimeState": "core/runtime.py"
+  },
+  "legacy_files": "Retained as lightweight import/main wrappers; no duplicate definitions"
+}

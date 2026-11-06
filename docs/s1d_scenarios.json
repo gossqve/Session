@@ -1,0 +1,102 @@
+{
+  "normal": {
+    "command": "python -m replacement.demos.serving_demo --config configs/s1d_normal.json --out runs\\s1d_normal_20261105_181600_319024",
+    "output_directory": "runs\\s1d_normal_20261105_181600_319024",
+    "summary": {
+      "stage": "S1-D",
+      "scenario": "S1D_normal",
+      "seed": 42,
+      "planned_turns": 4,
+      "completed_turns": 4,
+      "submitted_turns": 4,
+      "unfinished_turns": 0,
+      "completion_rate": 1.0,
+      "mean_full_turn_e2e_s": 0.6,
+      "completed_turn_p95_e2e_s": 0.8,
+      "p95_scope": "normally completed Turns; nearest-rank",
+      "gpu_work": 12,
+      "gpu_queue_wait_s": 0.0,
+      "kv_blocked_time_s": 0.0,
+      "blocked_sessions": 0,
+      "peak_kv_bytes": 32,
+      "final_kv_bytes": 0,
+      "observation_end_s": 1.4,
+      "ignored_gpu_predictions": 1
+    }
+  },
+  "queue": {
+    "command": "python -m replacement.demos.serving_demo --config configs/s1d_queue.json --out runs\\s1d_queue_20261105_181600_319024",
+    "output_directory": "runs\\s1d_queue_20261105_181600_319024",
+    "summary": {
+      "stage": "S1-D",
+      "scenario": "S1D_queue",
+      "seed": 42,
+      "planned_turns": 4,
+      "completed_turns": 4,
+      "submitted_turns": 4,
+      "unfinished_turns": 0,
+      "completion_rate": 1.0,
+      "mean_full_turn_e2e_s": 0.6,
+      "completed_turn_p95_e2e_s": 0.8,
+      "p95_scope": "normally completed Turns; nearest-rank",
+      "gpu_work": 12,
+      "gpu_queue_wait_s": 0.4,
+      "kv_blocked_time_s": 0.0,
+      "blocked_sessions": 0,
+      "peak_kv_bytes": 32,
+      "final_kv_bytes": 0,
+      "observation_end_s": 1.4,
+      "ignored_gpu_predictions": 0
+    }
+  },
+  "recover": {
+    "command": "python -m replacement.demos.serving_demo --config configs/s1d_recover.json --out runs\\s1d_recover_20261105_181600_319024",
+    "output_directory": "runs\\s1d_recover_20261105_181600_319024",
+    "summary": {
+      "stage": "S1-D",
+      "scenario": "S1D_recover",
+      "seed": 42,
+      "planned_turns": 3,
+      "completed_turns": 3,
+      "submitted_turns": 3,
+      "unfinished_turns": 0,
+      "completion_rate": 1.0,
+      "mean_full_turn_e2e_s": 2.233333333333,
+      "completed_turn_p95_e2e_s": 3.2,
+      "p95_scope": "normally completed Turns; nearest-rank",
+      "gpu_work": 8,
+      "gpu_queue_wait_s": 0.1,
+      "kv_blocked_time_s": 2.5,
+      "blocked_sessions": 0,
+      "peak_kv_bytes": 20,
+      "final_kv_bytes": 0,
+      "observation_end_s": 3.6,
+      "ignored_gpu_predictions": 0
+    }
+  },
+  "blocked": {
+    "command": "python -m replacement.demos.serving_demo --config configs/s1d_blocked.json --out runs\\s1d_blocked_20261105_181600_319024",
+    "output_directory": "runs\\s1d_blocked_20261105_181600_319024",
+    "summary": {
+      "stage": "S1-D",
+      "scenario": "S1D_blocked",
+      "seed": 42,
+      "planned_turns": 4,
+      "completed_turns": 0,
+      "submitted_turns": 2,
+      "unfinished_turns": 4,
+      "completion_rate": 0.0,
+      "mean_full_turn_e2e_s": null,
+      "completed_turn_p95_e2e_s": null,
+      "p95_scope": "normally completed Turns; nearest-rank",
+      "gpu_work": 3,
+      "gpu_queue_wait_s": 0.1,
+      "kv_blocked_time_s": 0.1,
+      "blocked_sessions": 2,
+      "peak_kv_bytes": 4,
+      "final_kv_bytes": 4,
+      "observation_end_s": 0.4,
+      "ignored_gpu_predictions": 0
+    }
+  }
+}

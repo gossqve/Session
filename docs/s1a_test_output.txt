@@ -1,0 +1,29 @@
+test_a_single_task (test_gpu.GPUTests) ... ok
+test_advance_cannot_skip_pending_completion (test_gpu.GPUTests) ... ok
+test_b_simultaneous_equal_tasks (test_gpu.GPUTests) ... ok
+test_c_midway_arrival_and_remaining_work (test_gpu.GPUTests) ... ok
+test_d_three_tasks_and_old_predictions (test_gpu.GPUTests) ... ok
+test_demo_multiple_sessions_use_shared_resource (test_gpu.GPUTests) ... ok
+test_e_conservation_at_intermediate_times (test_gpu.GPUTests) ... ok
+test_exit_settles_and_redistributes_without_completing_withdrawn_task (test_gpu.GPUTests) ... ok
+test_f_completion_at_arrival_in_either_dispatch_order (test_gpu.GPUTests) ... ok
+test_f_deterministic_trace_and_stable_submission_order (test_gpu.GPUTests) ... ok
+test_f_invalid_values_and_duplicate_ids (test_gpu.GPUTests) ... ok
+test_f_zero_work_idle_and_restart (test_gpu.GPUTests) ... ok
+test_fractional_deadline_and_sub_tick_work_progress (test_gpu.GPUTests) ... ok
+test_general_task_count_with_unequal_work (test_gpu.GPUTests) ... ok
+test_nonterminating_decimal_deadline_and_interval_capacity (test_gpu.GPUTests) ... ok
+test_replayed_completion_does_not_notify_twice (test_gpu.GPUTests) ... ok
+test_resource_isolation_on_shared_queue (test_gpu.GPUTests) ... ok
+test_completion_waits_for_output_delivery (test_s0.S0Tests) ... ok
+test_context_window_is_across_all_turns (test_s0.S0Tests) ... ok
+test_deterministic_trace (test_s0.S0Tests) ... ok
+test_stable_event_order_same_time (test_s0.S0Tests) ... ok
+test_two_turn_hand_calculation_and_zero_idle (test_s0.S0Tests) ... ok
+test_unsafe_capacity_rejected_without_fake_success (test_s0.S0Tests) ... ok
+test_zero_output_turn (test_s0.S0Tests) ... ok
+
+----------------------------------------------------------------------
+Ran 24 tests in 0.007s
+
+OK

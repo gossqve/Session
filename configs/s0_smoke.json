@@ -4,13 +4,18 @@
   "edge": {
     "id": "E1",
     "gpu_work_per_second": 10.0,
+    "gpu_slots": 1,
+    "deployed_models": ["synthetic-model"],
     "kv_capacity_bytes": 100
   },
   "model": {
     "id": "synthetic-model",
     "prefill_work_per_token": 1.0,
     "decode_work_per_token": 2.0,
-    "kv_bytes_per_token": 4,
+    "layers": 1,
+    "kv_heads": 1,
+    "head_dim": 1,
+    "element_bytes": 2,
     "context_window_tokens": 20,
     "output_limit_per_turn": 4
   },
@@ -22,7 +27,6 @@
   "session": {
     "id": "S1",
     "model_id": "synthetic-model",
-    "priority": "L",
     "access_edge_id": "E1",
     "execution_edge_id": "E1",
     "turns": [

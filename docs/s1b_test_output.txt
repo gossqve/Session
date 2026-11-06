@@ -1,0 +1,48 @@
+test_a_single_task (test_gpu.GPUTests) ... ok
+test_advance_cannot_skip_pending_completion (test_gpu.GPUTests) ... ok
+test_b_simultaneous_equal_tasks (test_gpu.GPUTests) ... ok
+test_c_midway_arrival_and_remaining_work (test_gpu.GPUTests) ... ok
+test_d_three_tasks_and_old_predictions (test_gpu.GPUTests) ... ok
+test_demo_multiple_sessions_use_shared_resource (test_gpu.GPUTests) ... ok
+test_e_conservation_at_intermediate_times (test_gpu.GPUTests) ... ok
+test_exit_settles_and_redistributes_without_completing_withdrawn_task (test_gpu.GPUTests) ... ok
+test_f_completion_at_arrival_in_either_dispatch_order (test_gpu.GPUTests) ... ok
+test_f_deterministic_trace_and_stable_submission_order (test_gpu.GPUTests) ... ok
+test_f_invalid_values_and_duplicate_ids (test_gpu.GPUTests) ... ok
+test_f_zero_work_idle_and_restart (test_gpu.GPUTests) ... ok
+test_fractional_deadline_and_sub_tick_work_progress (test_gpu.GPUTests) ... ok
+test_general_task_count_with_unequal_work (test_gpu.GPUTests) ... ok
+test_nonterminating_decimal_deadline_and_interval_capacity (test_gpu.GPUTests) ... ok
+test_replayed_completion_does_not_notify_twice (test_gpu.GPUTests) ... ok
+test_resource_isolation_on_shared_queue (test_gpu.GPUTests) ... ok
+test_a_sufficient_slots (test_gpu_queue.GPUQueueTests) ... ok
+test_b_three_tasks_two_slots_no_work_while_waiting (test_gpu_queue.GPUQueueTests) ... ok
+test_c_single_slot (test_gpu_queue.GPUQueueTests) ... ok
+test_d_fcfs_ready_time_and_stable_submission_ties (test_gpu_queue.GPUQueueTests) ... ok
+test_demo_outputs_gpu_phase_times_and_is_repeatable (test_gpu_queue.GPUQueueTests) ... ok
+test_demo_rejects_invalid_waiting_work_and_ids_before_run (test_gpu_queue.GPUQueueTests) ... ok
+test_e_dynamic_shares_stale_prediction_and_conservation (test_gpu_queue.GPUQueueTests) ... ok
+test_f_cancel_running_and_waiting_tasks (test_gpu_queue.GPUQueueTests) ... ok
+test_f_completion_wins_cancellation_tie_and_notifications_are_once (test_gpu_queue.GPUQueueTests) ... ok
+test_f_edge_isolation_with_shared_event_queue (test_gpu_queue.GPUQueueTests) ... ok
+test_f_idle_restart_and_waiting_time_checkpoint (test_gpu_queue.GPUQueueTests) ... ok
+test_f_multiple_releases_fill_all_slots_in_fcfs_order (test_gpu_queue.GPUQueueTests) ... ok
+test_f_new_arrival_never_bypasses_existing_waiter_at_completion (test_gpu_queue.GPUQueueTests) ... ok
+test_f_repeatable_trace (test_gpu_queue.GPUQueueTests) ... ok
+test_f_replay_stale_and_foreign_events_do_not_mutate_state (test_gpu_queue.GPUQueueTests) ... ok
+test_f_validation_rejects_without_side_effects (test_gpu_queue.GPUQueueTests) ... ok
+test_f_zero_work_obeys_fcfs_and_drains_without_time_advance (test_gpu_queue.GPUQueueTests) ... ok
+test_integer_work_preserves_engine_precision (test_gpu_queue.GPUQueueTests) ... ok
+test_lossy_integer_clock_is_rejected_before_any_mutation (test_gpu_queue.GPUQueueTests) ... ok
+test_completion_waits_for_output_delivery (test_s0.S0Tests) ... ok
+test_context_window_is_across_all_turns (test_s0.S0Tests) ... ok
+test_deterministic_trace (test_s0.S0Tests) ... ok
+test_stable_event_order_same_time (test_s0.S0Tests) ... ok
+test_two_turn_hand_calculation_and_zero_idle (test_s0.S0Tests) ... ok
+test_unsafe_capacity_rejected_without_fake_success (test_s0.S0Tests) ... ok
+test_zero_output_turn (test_s0.S0Tests) ... ok
+
+----------------------------------------------------------------------
+Ran 43 tests in 0.022s
+
+OK

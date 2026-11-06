@@ -1,0 +1,80 @@
+{
+  "scenario": "S1D_recover",
+  "seed": 42,
+  "models": [
+    {
+      "id": "synthetic-4B",
+      "layers": 1,
+      "kv_heads": 1,
+      "head_dim": 1,
+      "element_bytes": 2,
+      "context_window_tokens": 100,
+      "output_limit_per_turn": 10,
+      "prefill_work_per_token": 1,
+      "decode_work_per_token": 1
+    },
+    {
+      "id": "synthetic-8B",
+      "layers": 1,
+      "kv_heads": 1,
+      "head_dim": 1,
+      "element_bytes": 4,
+      "context_window_tokens": 100,
+      "output_limit_per_turn": 10,
+      "prefill_work_per_token": 2,
+      "decode_work_per_token": 2
+    }
+  ],
+  "edges": [
+    {
+      "id": "E1",
+      "gpu_work_per_second": 10,
+      "gpu_slots": 1,
+      "kv_capacity_bytes": 20,
+      "deployed_models": [
+        "synthetic-4B",
+        "synthetic-8B"
+      ]
+    }
+  ],
+  "network": {
+    "text_bytes_per_token": 1,
+    "wireless_up_bits_per_second": 80,
+    "wireless_down_bits_per_second": 80
+  },
+  "sessions": [
+    {
+      "id": "S1",
+      "model_id": "synthetic-4B",
+      "arrival_time": 0,
+      "access_edge_id": "E1",
+      "execution_edge_id": "E1",
+      "turns": [
+        {
+          "input_tokens": 2,
+          "output_tokens": 1
+        },
+        {
+          "input_tokens": 1,
+          "output_tokens": 1
+        }
+      ]
+    },
+    {
+      "id": "S2",
+      "model_id": "synthetic-4B",
+      "arrival_time": 0,
+      "access_edge_id": "E1",
+      "execution_edge_id": "E1",
+      "turns": [
+        {
+          "input_tokens": 0,
+          "output_tokens": 3
+        }
+      ],
+      "network": {
+        "wireless_down_bits_per_second": 8
+      }
+    }
+  ]
+}

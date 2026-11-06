@@ -1,0 +1,52 @@
+[
+  {
+    "source_zip": "C:\\Users\\71968\\Desktop\\Section_III_%E6%9C%80%E7%BB%88%E5%BB%BA%E6%A8%A1%E7%A8%BF_%E7%BD%91%E7%BB%9C%E5%8F%AF%E8%BE%BE%E6%80%A7%E8%A1%A5%E5%85%85_2026-11-06.zip",
+    "archive_sha256": "7205901d7075ebe44d8523e35e37017381316d21005737bdfdd1a1677d0fdbaf",
+    "adopted_main": true,
+    "files": [
+      {
+        "relative_path": "docs/model_spec/2026-11-06-reachability/Section_III_完整中文系统建模_最终核查修订版.md",
+        "bytes": 63956,
+        "sha256": "1a082fbbbe73dff31621eb66073a841788f4c0c0f5a9bb1e8567b3af69b666a4",
+        "identical_to_archive": true
+      },
+      {
+        "relative_path": "docs/model_spec/2026-11-06-reachability/Section_III_公式与参考文献依据核对表_最终版.md",
+        "bytes": 66285,
+        "sha256": "1ac0bcf75781c6d053d1a130c0c7797dcb2056ff34927536e0e9cb2cdb5f9d5b",
+        "identical_to_archive": true
+      },
+      {
+        "relative_path": "docs/model_spec/2026-11-06-reachability/Section_III_最终一致性检查报告.md",
+        "bytes": 13808,
+        "sha256": "dfe4e4d8f17fcc124ee4db4bd60e13c4b811a4f443098f0578d1afb5260d710b",
+        "identical_to_archive": true
+      }
+    ]
+  },
+  {
+    "source_zip": "C:\\Users\\71968\\Desktop\\Section_III_最终小问题修订与全量复核_2026-11-06.zip",
+    "archive_sha256": "7cba479ebe004246cdc3f0beb67be125c3c20f62dda4687cb8c4012f302550ad",
+    "adopted_main": false,
+    "files": [
+      {
+        "relative_path": "docs/model_spec/2026-11-06-final/Section_III_完整中文系统建模_最终核查修订版.md",
+        "bytes": 63421,
+        "sha256": "04e1cb0b78c12bb0ae12ad46b151cd0d94de322a552e5ebda889058c01b86ad0",
+        "identical_to_archive": true
+      },
+      {
+        "relative_path": "docs/model_spec/2026-11-06-final/Section_III_公式与参考文献依据核对表_最终版.md",
+        "bytes": 66285,
+        "sha256": "1ac0bcf75781c6d053d1a130c0c7797dcb2056ff34927536e0e9cb2cdb5f9d5b",
+        "identical_to_archive": true
+      },
+      {
+        "relative_path": "docs/model_spec/2026-11-06-final/Section_III_最终一致性检查报告.md",
+        "bytes": 12894,
+        "sha256": "2875db63c7ceb9f0a3b7140c11bca617790f62915ce40356b7a16874fbc0ca62",
+        "identical_to_archive": true
+      }
+    ]
+  }
+]
