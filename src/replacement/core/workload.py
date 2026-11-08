@@ -91,7 +91,22 @@ class WorkloadDriver:
         for s in config["sessions"]:
             if "priority" in s:
                 raise ValueError("Session priority was removed")
-            net = {**config["network"], **s.get("network", {})}
+            overrides = s.get("network", {})
+            net = {**config["network"], **overrides}
+            # A per-Session direction can replace the global representation;
+            # two representations in the same scope remain an error.
+            for direction in ("up", "down"):
+                effective = f"wireless_{direction}_bits_per_second"
+                physical = f"wireless_{direction}"
+                if effective in config["network"] and physical in config["network"]:
+                    raise ValueError("Global wireless direction has two rate representations")
+                if physical in overrides and effective not in overrides:
+                    net.pop(effective, None)
+                if effective in overrides and physical not in overrides:
+                    net.pop(physical, None)
+            from ..network.wireless import resolve_wireless_rate
+            net["wireless_up_bits_per_second"] = resolve_wireless_rate(net, "up")
+            net["wireless_down_bits_per_second"] = resolve_wireless_rate(net, "down")
             number(s.get("arrival_time", 0))
             plans.append(SessionPlan(
                 s["id"], s["model_id"], round(s.get("arrival_time", 0), 12),

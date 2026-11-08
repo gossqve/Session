@@ -1,0 +1,382 @@
+{
+  "scenario": "S2A_static_topology",
+  "areas": [
+    {
+      "area_id": "A",
+      "boundary_node": "gA"
+    },
+    {
+      "area_id": "B",
+      "boundary_node": "gB"
+    },
+    {
+      "area_id": "C",
+      "boundary_node": "gC"
+    }
+  ],
+  "edges": [
+    {
+      "id": "E1",
+      "area_id": "A",
+      "gpu_work_per_second": 10,
+      "gpu_slots": 2,
+      "kv_capacity_bytes": 256,
+      "deployed_models": []
+    },
+    {
+      "id": "E2",
+      "area_id": "A",
+      "gpu_work_per_second": 10,
+      "gpu_slots": 2,
+      "kv_capacity_bytes": 256,
+      "deployed_models": []
+    },
+    {
+      "id": "E3",
+      "area_id": "B",
+      "gpu_work_per_second": 10,
+      "gpu_slots": 2,
+      "kv_capacity_bytes": 256,
+      "deployed_models": []
+    },
+    {
+      "id": "E4",
+      "area_id": "B",
+      "gpu_work_per_second": 10,
+      "gpu_slots": 2,
+      "kv_capacity_bytes": 256,
+      "deployed_models": []
+    },
+    {
+      "id": "E5",
+      "area_id": "C",
+      "gpu_work_per_second": 10,
+      "gpu_slots": 2,
+      "kv_capacity_bytes": 256,
+      "deployed_models": []
+    },
+    {
+      "id": "E6",
+      "area_id": "C",
+      "gpu_work_per_second": 10,
+      "gpu_slots": 2,
+      "kv_capacity_bytes": 256,
+      "deployed_models": []
+    }
+  ],
+  "links": [
+    {
+      "link_id": "E1-out",
+      "source_node": "E1",
+      "target_node": "gA",
+      "capacity_bps": 100000000
+    },
+    {
+      "link_id": "E1-in",
+      "source_node": "gA",
+      "target_node": "E1",
+      "capacity_bps": 80000000
+    },
+    {
+      "link_id": "E2-out",
+      "source_node": "E2",
+      "target_node": "gA",
+      "capacity_bps": 100000000
+    },
+    {
+      "link_id": "E2-in",
+      "source_node": "gA",
+      "target_node": "E2",
+      "capacity_bps": 80000000
+    },
+    {
+      "link_id": "E3-out",
+      "source_node": "E3",
+      "target_node": "gB",
+      "capacity_bps": 100000000
+    },
+    {
+      "link_id": "E3-in",
+      "source_node": "gB",
+      "target_node": "E3",
+      "capacity_bps": 80000000
+    },
+    {
+      "link_id": "E4-out",
+      "source_node": "E4",
+      "target_node": "gB",
+      "capacity_bps": 100000000
+    },
+    {
+      "link_id": "E4-in",
+      "source_node": "gB",
+      "target_node": "E4",
+      "capacity_bps": 80000000
+    },
+    {
+      "link_id": "E5-out",
+      "source_node": "E5",
+      "target_node": "gC",
+      "capacity_bps": 100000000
+    },
+    {
+      "link_id": "E5-in",
+      "source_node": "gC",
+      "target_node": "E5",
+      "capacity_bps": 80000000
+    },
+    {
+      "link_id": "E6-out",
+      "source_node": "E6",
+      "target_node": "gC",
+      "capacity_bps": 100000000
+    },
+    {
+      "link_id": "E6-in",
+      "source_node": "gC",
+      "target_node": "E6",
+      "capacity_bps": 80000000
+    },
+    {
+      "link_id": "A-B",
+      "source_node": "gA",
+      "target_node": "gB",
+      "capacity_bps": 100000000
+    },
+    {
+      "link_id": "B-A",
+      "source_node": "gB",
+      "target_node": "gA",
+      "capacity_bps": 80000000
+    },
+    {
+      "link_id": "A-C",
+      "source_node": "gA",
+      "target_node": "gC",
+      "capacity_bps": 100000000
+    },
+    {
+      "link_id": "C-A",
+      "source_node": "gC",
+      "target_node": "gA",
+      "capacity_bps": 80000000
+    },
+    {
+      "link_id": "B-C",
+      "source_node": "gB",
+      "target_node": "gC",
+      "capacity_bps": 100000000
+    },
+    {
+      "link_id": "C-B",
+      "source_node": "gC",
+      "target_node": "gB",
+      "capacity_bps": 80000000
+    },
+    {
+      "link_id": "E1-E2",
+      "source_node": "E1",
+      "target_node": "E2",
+      "capacity_bps": 60000000
+    },
+    {
+      "link_id": "E2-E1",
+      "source_node": "E2",
+      "target_node": "E1",
+      "capacity_bps": 50000000
+    },
+    {
+      "link_id": "E3-E4",
+      "source_node": "E3",
+      "target_node": "E4",
+      "capacity_bps": 60000000
+    },
+    {
+      "link_id": "E4-E3",
+      "source_node": "E4",
+      "target_node": "E3",
+      "capacity_bps": 50000000
+    },
+    {
+      "link_id": "E5-E6",
+      "source_node": "E5",
+      "target_node": "E6",
+      "capacity_bps": 60000000
+    },
+    {
+      "link_id": "E6-E5",
+      "source_node": "E6",
+      "target_node": "E5",
+      "capacity_bps": 50000000
+    }
+  ],
+  "paths": [
+    {
+      "path_id": "p-E1-E2",
+      "source_node": "E1",
+      "target_node": "E2",
+      "link_ids": [
+        "E1-E2"
+      ]
+    },
+    {
+      "path_id": "p-E2-E1",
+      "source_node": "E2",
+      "target_node": "E1",
+      "link_ids": [
+        "E2-E1"
+      ]
+    },
+    {
+      "path_id": "p-E3-E4",
+      "source_node": "E3",
+      "target_node": "E4",
+      "link_ids": [
+        "E3-E4"
+      ]
+    },
+    {
+      "path_id": "p-E4-E3",
+      "source_node": "E4",
+      "target_node": "E3",
+      "link_ids": [
+        "E4-E3"
+      ]
+    },
+    {
+      "path_id": "p-E5-E6",
+      "source_node": "E5",
+      "target_node": "E6",
+      "link_ids": [
+        "E5-E6"
+      ]
+    },
+    {
+      "path_id": "p-E6-E5",
+      "source_node": "E6",
+      "target_node": "E5",
+      "link_ids": [
+        "E6-E5"
+      ]
+    },
+    {
+      "path_id": "p-E1-E3",
+      "source_node": "E1",
+      "target_node": "E3",
+      "link_ids": [
+        "E1-out",
+        "A-B",
+        "E3-in"
+      ]
+    },
+    {
+      "path_id": "p-E3-E1",
+      "source_node": "E3",
+      "target_node": "E1",
+      "link_ids": [
+        "E3-out",
+        "B-A",
+        "E1-in"
+      ]
+    },
+    {
+      "path_id": "p-E3-E5",
+      "source_node": "E3",
+      "target_node": "E5",
+      "link_ids": [
+        "E3-out",
+        "B-C",
+        "E5-in"
+      ]
+    },
+    {
+      "path_id": "p-E5-E3",
+      "source_node": "E5",
+      "target_node": "E3",
+      "link_ids": [
+        "E5-out",
+        "C-B",
+        "E3-in"
+      ]
+    },
+    {
+      "path_id": "p-E1-E5",
+      "source_node": "E1",
+      "target_node": "E5",
+      "link_ids": [
+        "E1-out",
+        "A-C",
+        "E5-in"
+      ]
+    },
+    {
+      "path_id": "p-E5-E1",
+      "source_node": "E5",
+      "target_node": "E1",
+      "link_ids": [
+        "E5-out",
+        "C-A",
+        "E1-in"
+      ]
+    }
+  ],
+  "allowed_serving_pairs": [
+    [
+      "E1",
+      "E1"
+    ],
+    [
+      "E1",
+      "E2"
+    ],
+    [
+      "E1",
+      "E3"
+    ],
+    [
+      "E3",
+      "E1"
+    ],
+    [
+      "E3",
+      "E5"
+    ],
+    [
+      "E5",
+      "E1"
+    ]
+  ],
+  "mobility_adjacency": {
+    "E1": [
+      "E2",
+      "E3",
+      "E5"
+    ],
+    "E3": [
+      "E1",
+      "E5"
+    ],
+    "E5": [
+      "E1",
+      "E3"
+    ]
+  },
+  "mobility_transitions": [
+    [
+      "E1",
+      "E2"
+    ],
+    [
+      "E1",
+      "E3"
+    ],
+    [
+      "E3",
+      "E5"
+    ],
+    [
+      "E5",
+      "E1"
+    ]
+  ]
+}

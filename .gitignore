@@ -11,3 +11,50 @@ __pycache__/
 .env
 .env.*
 *.log
+
+# Reviewed source roots only; future S3/S4/S5 outputs at new root paths stay local.
+/*
+!/.gitignore
+!/README.md
+!/AGENTS.md
+!/pyproject.toml
+!/src/
+!/tests/
+!/configs/
+!/scripts/
+!/docs/
+!/release/
+
+# Current documentation contract; stage logs/reports/manifests remain local.
+/docs/*
+!/docs/model_spec/
+!/docs/ARCHITECTURE.md
+!/docs/REPOSITORY_FILES.md
+# Required regression fixture read by scripts/verify_s1e.py (not disposable output).
+!/docs/s1d_verification.json
+/docs/model_spec/**/__pycache__/
+
+# Release lists are reviewed inputs; archives and audit output are never inputs.
+/release/*
+!/release/server_files.txt
+!/release/github_files.txt
+
+# Generated material inside otherwise retained roots.
+**/runs/
+**/outputs/
+**/results/
+**/artifacts/
+**/tmp/
+**/temp/
+**/.ipynb_checkpoints/
+*.zip
+*.tar
+*.tar.gz
+*.joblib
+*.pkl
+*.pickle
+*.pt
+*.pth
+*.safetensors
+
+# Never blanket-ignore *.json or tests/fixtures: real inputs must remain visible.

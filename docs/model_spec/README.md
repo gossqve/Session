@@ -1,5 +1,18 @@
 # 当前正式建模与历史材料索引
 
+当前复现入口见 [ARCHITECTURE](../ARCHITECTURE.md)，文件发布规则见 [REPOSITORY_FILES](../REPOSITORY_FILES.md)。
+下列阶段历史报告保留在 Windows 本地，不是运行或测试依赖。原始模型正文保持原字节。
+
+当前S2-C（2026-11-08）：正式默认无权Max-Min Progressive Filling已接入共享网络；直接依据同一主文B.2，复用S2-A/Flow/通知/无线，保留整个固定路径占用与精确残余容量。
+旧S2-B默认共享拒绝规则已由显式Disjoint历史测试替代；S3/S4实际移动和迁移仍未实现。当前报告：`../S2-C_MaxMin动态带宽分配与综合Serving实现报告.md`（仅本地阶段档案）。
+
+2026-11-08：当前阶段S2-B，在S2-A唯一拓扑上实现有线Flow和独立无线字节推进，接入固定远程Serving。仍以2026-11-06 B.1/B.2字节公式/B.3通用流水规则为准；Max-Min留S2-C，Handover留S3，迁移留S4。
+共享有向Link的并发默认明确拒绝；不得恢复历史一次均分、逐Turn移动、优先级或抢占。当前报告：`../S2-B_网络Flow与字节推进实现报告.md`（仅本地阶段档案）。
+
+2026-11-07：当前阶段S2-A，只实现静态Area/有向Link/固定Path及初始化可达性预检。依据仍为2026-11-06可达性补充主文B.1，其中g_r保留为非服务边界。
+正式复用现有EdgeState，不改S1语义，不实现Flow/Byte推进/Max-Min/Markov/Handover。预检仅对显式允许Serving组合与可能移动转移；不推测全Edge笛卡尔积。
+当前实现报告：`../S2-A_网络拓扑建模与实现报告.md`（仅本地阶段档案）。
+
 2026-11-06：S1最终清理要求优先于下方历史S1-E接口描述。
 
 当前代码只使用canonical子包；旧根目录转发模块已删除。任何per-Turn Access配置加载即拒绝，不再保留兼容映射。
@@ -7,7 +20,7 @@ Turn结果仅用submitted_access_edge_id；交付必须显式token_id。Session�
 固定模型在Admission配置绑定，禁止H/L、抢占、旧R2A选择逻辑；在线不得查看未来Turn/输出/移动。
 
 当前主文：[2026-11-06含可达性补充](2026-11-06-reachability/Section_III_完整中文系统建模_最终核查修订版.md)。
-完整清理与验收：[S1_cleanup_report.md](../S1_cleanup_report.md)。
+完整清理与验收：`../S1_cleanup_report.md`（仅本地阶段档案）。
 `开发建模注意.md`及下列版本记录保留原阶段历史；其中逐轮移动、兼容接口、服务器操作建议等与用户当前要求冲突的条款不执行。
 未来Mobility按独立固定秒级检查和邻接Markov产生，可在Turn内合法Handover；S1不实现该运行机制。
 

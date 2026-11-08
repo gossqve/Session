@@ -1,8 +1,8 @@
 # Stateful AI Session Re-placement
 
-当前状态：S1 完成实体、GPU、KV、多 Session/多 Turn Serving 与最终旧代码清理。
+当前状态：S1 已完成最终清理；S2-A 静态拓扑、S2-B 真实 Flow/字节推进与 S2-C 无权 Max-Min 已接入 Serving。无拓扑配置时仍使用本地 S1；启用拓扑可运行固定远程 Access/Execution。
 建模依据是 2026-11-06 Section III（含可达性补充）、用户删除优先级/抢占/旧选择器的覆盖，以及本次最终清理要求。
-当前完整说明：[S1 cleanup report](docs/S1_cleanup_report.md)。
+当前复现说明：[架构与验收入口](docs/ARCHITECTURE.md)；[文件保留与发布规范](docs/REPOSITORY_FILES.md)。
 
 ## 唯一正式接口
 
@@ -45,7 +45,7 @@ Pending恢复不重算，后续新计算重新FCFS。底层atomic API仍用于�
 有任意计划Turn未正常完成时，全量平均E2E为null；p95明确为正常完成子集。
 
 S1固定Access=Execution，无线每用户独立有效速率。无H/L服务优先级、抢占、内部模型选择器。
-EventQueue.priority仅表示同刻事件处理阶段。未实现S2有向网络/Max-Min、S3独立秒级Markov/Handover、S4迁移、后续策略/PPO。
+EventQueue.priority仅表示同刻事件处理阶段。S2-B已实现真实网络传输；共享有向链路现由正式Max-Min动态分配。S3独立秒级Markov/Handover、S4迁移、后续策略/PPO尚未实现。
 合成参数用于手算验证，不是实际硬件性能或论文实验结果。
 
 ## 数据与配置边界
@@ -63,9 +63,73 @@ EventQueue.priority仅表示同刻事件处理阶段。未实现S2有向网络/M
 Serving输出Turn JSON/CSV、Session/resource、OutputToken、事件JSONL、GPU/KV事件和离线config。
 文本Byte与结构KV Byte独立记账；交付唯一权威状态为Turn.delivered前缀。
 
-本次新增/修改：[S1_cleanup_changed_paths.txt](docs/S1_cleanup_changed_paths.txt)。
-应从服务器删除的旧文件：[S1_cleanup_deleted_paths.txt](docs/S1_cleanup_deleted_paths.txt)。
-一次同步S1-E加本轮清理的上传清单：[S1_cleanup_sync_paths.txt](docs/S1_cleanup_sync_paths.txt)。
+当前服务器白名单：[server_files.txt](release/server_files.txt)。
+当前 GitHub 白名单：[github_files.txt](release/github_files.txt)。
+本地检查和打包：`python scripts/prepare_release.py --target server --package`，只产生新的本地 ZIP，不执行同步。
+历史阶段上传/删除清单只作本地档案，当前发布不再依赖它们。
 当前模型：[model_spec README](docs/model_spec/README.md)。
 Foundation/C/D/E报告、旧上传清单和历史runs保留为阶段档案，其中旧命令/兼容条款不再是当前接口要求。
 不上传缓存、凭据、环境、权重或runs；本地代理不执行SSH/SCP或Git提交/同步。
+
+## S2-A 静态拓扑与可达性
+
+正式实体位于 `replacement.network.entities`；唯一管理对象位于 `replacement.network.topology.NetworkTopology`。
+Area边界是非服务节点，Edge仍复用core.entities.EdgeState。S2参与Edge必须明确area_id；S1未指定Area的配置不受影响。
+跨区域固定路径为Edge→本域边界→目的域边界→目的Edge；不自动寻路、补反向链路或经过第三域。
+
+```powershell
+python -m unittest discover -s tests -p test_topology.py -v
+$env:PYTHONPATH = 'src'
+python -m replacement.demos.topology_demo --config configs/s2a_topology_smoke.json
+```
+
+生产调用：`NetworkTopology.from_config(config, edges=runtime.edges.values())`；加载时验证所有链路、路径、显式允许的双向Serving组合与可能移动转移。
+邻接不代表有线路径；未来传输应复用同一拓扑对象及只读links/paths，不能另建独立拓扑。
+S2-A 子模块本身只负责静态拓扑；Flow/字节推进与共享分别在下述 S2-B/C 实现，Markov与Handover仍未执行。
+完整复现说明见 [ARCHITECTURE](docs/ARCHITECTURE.md)，阶段报告仅本地归档。
+
+## S2-B Flow、字节推进与远程Serving
+
+`network.runtime.NetworkRuntime`复用同一EventQueue，Flow快照不可变；G/Y按Fraction真实推进，bit/s除以8换Byte。
+`WirelessRuntime`复用同一推进内核，每Session/方向独立，替换正式Serving原有固定时长调度；不参与有线公平分配。
+S2-B阶段Disjoint分配器仅允许正待发Flow路径不共享有向Link，现仅在显式历史模式抛S2CRequired；正式默认已改为下节S2-C Max-Min。
+
+启用方式：Serving配置增加`topology`（S2-A schema），其edges必须与顶层已有EdgeState一致。
+准入检查允许组合成员资格、模型部署和独立双向可达性。无线完整上传后转有线Prompt，输入完整到Execution才Ready；
+合法输出追加同一Turn持续Response Flow，到达累计Token边界才进入无线FIFO。Flow暂空等待数据，正式生成结束才关闭生产者。
+
+```powershell
+python scripts/verify_s2b.py
+$env:PYTHONPATH = 'src'
+python -m replacement.demos.serving_demo --config configs/s2b_remote.json
+```
+
+五个配置：s2b_local / remote / pipeline / disjoint / conflict。最后一个是S2-C阶段边界反例，预期拒绝。
+脚本在新的runs/s2b_*保存逐项日志和场景数据，同时运行原S1验收和S2-A Demo。
+输出新增network_flows.json、network_events.jsonl、wireless_transfers/events，以及Token有线到达/无线开始/实际接收时间。
+
+无线方向可直接给`wireless_up_bits_per_second`，或给`wireless_up={bandwidth_hz,snr_linear,efficiency}`（down同理）；
+同一配置作用域不能同时给两种表示。Session可按方向覆盖全局表示。更新速率先结算已有Byte，不重传。
+构造`ServingSimulator(config, network_allocator=...)`可为S2-C注入分配器；内核仍校验所有有向Link总容量。
+复现说明：[ARCHITECTURE](docs/ARCHITECTURE.md)；S2-B 阶段报告仅本地归档。
+
+## S2-C 正式共享网络默认
+
+启用topology的Serving与NetworkRuntime默认使用`network.max_min.MaxMinAllocator`。
+它从零同时增长未冻结Flow，遇饱和Link冻结相关Flow，保留冻结Flow对整条路径的占用并继续回收剩余容量；
+不是逐链路一次均分。速率和残余容量内部用Fraction，所有有向Link逐次检查容量。无线不参与此分配。
+
+```powershell
+python scripts/verify_s2c.py
+$env:PYTHONPATH = 'src'
+python -m replacement.demos.serving_demo --config configs/s2c_maxmin_three_area.json
+```
+
+配置：s2c_maxmin_shared、pipeline、three_area、wide。wide仅把六条跨域Link容量乘4，复用相同外生负载。
+每次分配在原network_events.jsonl输出原因、Flow G/Y、前后速率和逐Link容量/负载/余量/利用率。
+verify_s2c从同一轨迹导出flow_rates/link_utilization/flow_bytes三份JSONL视图，不建立另一套资源账本。
+独立Oracle使用有理数线性方程枚举有序可行区域顶点，和正式渐进填充实现分离。
+
+S2-B历史拒绝反例现在必须显式选择`--allocator disjoint`；verify_s2b已这样指定，其他场景使用正式Max-Min默认。
+旧S2-B文档中的“默认拒绝共享”仅为阶段历史。正的外部rate_limit仅是既有传输速率上限，不是业务权重；0表示显式暂停。
+复现说明：[ARCHITECTURE](docs/ARCHITECTURE.md)；S2-C 阶段报告仅本地归档。

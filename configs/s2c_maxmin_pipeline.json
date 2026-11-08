@@ -1,0 +1,461 @@
+{
+  "scenario": "s2c_maxmin_pipeline",
+  "seed": 20261108,
+  "models": [
+    {
+      "id": "m4",
+      "layers": 1,
+      "kv_heads": 1,
+      "head_dim": 1,
+      "element_bytes": 2,
+      "context_window_tokens": 200,
+      "output_limit_per_turn": 20,
+      "prefill_work_per_token": 1,
+      "decode_work_per_token": 1
+    },
+    {
+      "id": "m8",
+      "layers": 1,
+      "kv_heads": 1,
+      "head_dim": 1,
+      "element_bytes": 4,
+      "context_window_tokens": 200,
+      "output_limit_per_turn": 20,
+      "prefill_work_per_token": 1,
+      "decode_work_per_token": 5
+    }
+  ],
+  "edges": [
+    {
+      "id": "E1",
+      "area_id": "A",
+      "gpu_work_per_second": 10,
+      "gpu_slots": 2,
+      "kv_capacity_bytes": 4096,
+      "deployed_models": [
+        "m4",
+        "m8"
+      ]
+    },
+    {
+      "id": "E2",
+      "area_id": "A",
+      "gpu_work_per_second": 10,
+      "gpu_slots": 2,
+      "kv_capacity_bytes": 4096,
+      "deployed_models": [
+        "m4",
+        "m8"
+      ]
+    },
+    {
+      "id": "E3",
+      "area_id": "B",
+      "gpu_work_per_second": 10,
+      "gpu_slots": 2,
+      "kv_capacity_bytes": 4096,
+      "deployed_models": [
+        "m4",
+        "m8"
+      ]
+    },
+    {
+      "id": "E4",
+      "area_id": "B",
+      "gpu_work_per_second": 10,
+      "gpu_slots": 2,
+      "kv_capacity_bytes": 4096,
+      "deployed_models": [
+        "m4",
+        "m8"
+      ]
+    },
+    {
+      "id": "E5",
+      "area_id": "C",
+      "gpu_work_per_second": 10,
+      "gpu_slots": 2,
+      "kv_capacity_bytes": 4096,
+      "deployed_models": [
+        "m4",
+        "m8"
+      ]
+    },
+    {
+      "id": "E6",
+      "area_id": "C",
+      "gpu_work_per_second": 10,
+      "gpu_slots": 2,
+      "kv_capacity_bytes": 4096,
+      "deployed_models": [
+        "m4",
+        "m8"
+      ]
+    }
+  ],
+  "network": {
+    "text_bytes_per_token": 1,
+    "wireless_up_bits_per_second": 80,
+    "wireless_down_bits_per_second": 80
+  },
+  "topology": {
+    "areas": [
+      {
+        "area_id": "A",
+        "boundary_node": "gA"
+      },
+      {
+        "area_id": "B",
+        "boundary_node": "gB"
+      },
+      {
+        "area_id": "C",
+        "boundary_node": "gC"
+      }
+    ],
+    "edges": [
+      {
+        "id": "E1",
+        "area_id": "A",
+        "gpu_work_per_second": 10,
+        "gpu_slots": 2,
+        "kv_capacity_bytes": 4096,
+        "deployed_models": [
+          "m4",
+          "m8"
+        ]
+      },
+      {
+        "id": "E2",
+        "area_id": "A",
+        "gpu_work_per_second": 10,
+        "gpu_slots": 2,
+        "kv_capacity_bytes": 4096,
+        "deployed_models": [
+          "m4",
+          "m8"
+        ]
+      },
+      {
+        "id": "E3",
+        "area_id": "B",
+        "gpu_work_per_second": 10,
+        "gpu_slots": 2,
+        "kv_capacity_bytes": 4096,
+        "deployed_models": [
+          "m4",
+          "m8"
+        ]
+      },
+      {
+        "id": "E4",
+        "area_id": "B",
+        "gpu_work_per_second": 10,
+        "gpu_slots": 2,
+        "kv_capacity_bytes": 4096,
+        "deployed_models": [
+          "m4",
+          "m8"
+        ]
+      },
+      {
+        "id": "E5",
+        "area_id": "C",
+        "gpu_work_per_second": 10,
+        "gpu_slots": 2,
+        "kv_capacity_bytes": 4096,
+        "deployed_models": [
+          "m4",
+          "m8"
+        ]
+      },
+      {
+        "id": "E6",
+        "area_id": "C",
+        "gpu_work_per_second": 10,
+        "gpu_slots": 2,
+        "kv_capacity_bytes": 4096,
+        "deployed_models": [
+          "m4",
+          "m8"
+        ]
+      }
+    ],
+    "links": [
+      {
+        "link_id": "E1_gA",
+        "source_node": "E1",
+        "target_node": "gA",
+        "capacity_bps": 160
+      },
+      {
+        "link_id": "gA_E1",
+        "source_node": "gA",
+        "target_node": "E1",
+        "capacity_bps": 160
+      },
+      {
+        "link_id": "E2_gA",
+        "source_node": "E2",
+        "target_node": "gA",
+        "capacity_bps": 160
+      },
+      {
+        "link_id": "gA_E2",
+        "source_node": "gA",
+        "target_node": "E2",
+        "capacity_bps": 160
+      },
+      {
+        "link_id": "E3_gB",
+        "source_node": "E3",
+        "target_node": "gB",
+        "capacity_bps": 160
+      },
+      {
+        "link_id": "gB_E3",
+        "source_node": "gB",
+        "target_node": "E3",
+        "capacity_bps": 160
+      },
+      {
+        "link_id": "E4_gB",
+        "source_node": "E4",
+        "target_node": "gB",
+        "capacity_bps": 160
+      },
+      {
+        "link_id": "gB_E4",
+        "source_node": "gB",
+        "target_node": "E4",
+        "capacity_bps": 160
+      },
+      {
+        "link_id": "E5_gC",
+        "source_node": "E5",
+        "target_node": "gC",
+        "capacity_bps": 160
+      },
+      {
+        "link_id": "gC_E5",
+        "source_node": "gC",
+        "target_node": "E5",
+        "capacity_bps": 160
+      },
+      {
+        "link_id": "E6_gC",
+        "source_node": "E6",
+        "target_node": "gC",
+        "capacity_bps": 160
+      },
+      {
+        "link_id": "gC_E6",
+        "source_node": "gC",
+        "target_node": "E6",
+        "capacity_bps": 160
+      },
+      {
+        "link_id": "A_B",
+        "source_node": "gA",
+        "target_node": "gB",
+        "capacity_bps": 80
+      },
+      {
+        "link_id": "B_A",
+        "source_node": "gB",
+        "target_node": "gA",
+        "capacity_bps": 40
+      },
+      {
+        "link_id": "A_C",
+        "source_node": "gA",
+        "target_node": "gC",
+        "capacity_bps": 80
+      },
+      {
+        "link_id": "C_A",
+        "source_node": "gC",
+        "target_node": "gA",
+        "capacity_bps": 80
+      },
+      {
+        "link_id": "B_C",
+        "source_node": "gB",
+        "target_node": "gC",
+        "capacity_bps": 80
+      },
+      {
+        "link_id": "C_B",
+        "source_node": "gC",
+        "target_node": "gB",
+        "capacity_bps": 80
+      },
+      {
+        "link_id": "E5_E6",
+        "source_node": "E5",
+        "target_node": "E6",
+        "capacity_bps": 40
+      },
+      {
+        "link_id": "E6_E5",
+        "source_node": "E6",
+        "target_node": "E5",
+        "capacity_bps": 40
+      }
+    ],
+    "paths": [
+      {
+        "path_id": "E1_to_E3",
+        "source_node": "E1",
+        "target_node": "E3",
+        "link_ids": [
+          "E1_gA",
+          "A_B",
+          "gB_E3"
+        ]
+      },
+      {
+        "path_id": "E3_to_E1",
+        "source_node": "E3",
+        "target_node": "E1",
+        "link_ids": [
+          "E3_gB",
+          "B_A",
+          "gA_E1"
+        ]
+      },
+      {
+        "path_id": "E2_to_E4",
+        "source_node": "E2",
+        "target_node": "E4",
+        "link_ids": [
+          "E2_gA",
+          "A_B",
+          "gB_E4"
+        ]
+      },
+      {
+        "path_id": "E4_to_E2",
+        "source_node": "E4",
+        "target_node": "E2",
+        "link_ids": [
+          "E4_gB",
+          "B_A",
+          "gA_E2"
+        ]
+      },
+      {
+        "path_id": "E1_to_E5",
+        "source_node": "E1",
+        "target_node": "E5",
+        "link_ids": [
+          "E1_gA",
+          "A_C",
+          "gC_E5"
+        ]
+      },
+      {
+        "path_id": "E5_to_E1",
+        "source_node": "E5",
+        "target_node": "E1",
+        "link_ids": [
+          "E5_gC",
+          "C_A",
+          "gA_E1"
+        ]
+      },
+      {
+        "path_id": "E5_to_E6",
+        "source_node": "E5",
+        "target_node": "E6",
+        "link_ids": [
+          "E5_E6"
+        ]
+      },
+      {
+        "path_id": "E6_to_E5",
+        "source_node": "E6",
+        "target_node": "E5",
+        "link_ids": [
+          "E6_E5"
+        ]
+      },
+      {
+        "path_id": "E6_to_E4",
+        "source_node": "E6",
+        "target_node": "E4",
+        "link_ids": [
+          "E6_gC",
+          "C_B",
+          "gB_E4"
+        ]
+      },
+      {
+        "path_id": "E4_to_E6",
+        "source_node": "E4",
+        "target_node": "E6",
+        "link_ids": [
+          "E4_gB",
+          "B_C",
+          "gC_E6"
+        ]
+      }
+    ],
+    "allowed_serving_pairs": [
+      [
+        "E1",
+        "E3"
+      ],
+      [
+        "E2",
+        "E4"
+      ],
+      [
+        "E3",
+        "E1"
+      ],
+      [
+        "E1",
+        "E5"
+      ],
+      [
+        "E5",
+        "E6"
+      ],
+      [
+        "E6",
+        "E4"
+      ]
+    ],
+    "mobility_adjacency": {},
+    "mobility_transitions": []
+  },
+  "sessions": [
+    {
+      "id": "S1",
+      "model_id": "m4",
+      "arrival_time": 0,
+      "access_edge_id": "E1",
+      "execution_edge_id": "E3",
+      "turns": [
+        {
+          "input_tokens": 1,
+          "output_tokens": 6
+        }
+      ]
+    },
+    {
+      "id": "S2",
+      "model_id": "m8",
+      "arrival_time": 0,
+      "access_edge_id": "E2",
+      "execution_edge_id": "E4",
+      "turns": [
+        {
+          "input_tokens": 1,
+          "output_tokens": 4
+        }
+      ]
+    }
+  ]
+}

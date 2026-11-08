@@ -1,0 +1,182 @@
+{
+  "scenario": "S2B_disjoint",
+  "seed": 7,
+  "models": [
+    {
+      "id": "m",
+      "layers": 1,
+      "kv_heads": 1,
+      "head_dim": 1,
+      "element_bytes": 2,
+      "context_window_tokens": 100,
+      "output_limit_per_turn": 10,
+      "prefill_work_per_token": 1,
+      "decode_work_per_token": 1
+    }
+  ],
+  "edges": [
+    {
+      "id": "E",
+      "gpu_work_per_second": 10,
+      "gpu_slots": 1,
+      "kv_capacity_bytes": 256,
+      "deployed_models": [
+        "m"
+      ],
+      "area_id": "A"
+    },
+    {
+      "id": "E2",
+      "gpu_work_per_second": 10,
+      "gpu_slots": 1,
+      "kv_capacity_bytes": 256,
+      "deployed_models": [
+        "m"
+      ],
+      "area_id": "B"
+    }
+  ],
+  "network": {
+    "text_bytes_per_token": 1,
+    "wireless_up_bits_per_second": 80,
+    "wireless_down_bits_per_second": 80
+  },
+  "sessions": [
+    {
+      "id": "S1",
+      "model_id": "m",
+      "arrival_time": 0,
+      "access_edge_id": "E",
+      "execution_edge_id": "E2",
+      "turns": [
+        {
+          "input_tokens": 1,
+          "output_tokens": 1
+        }
+      ]
+    },
+    {
+      "id": "S2",
+      "model_id": "m",
+      "arrival_time": 0,
+      "access_edge_id": "E2",
+      "execution_edge_id": "E",
+      "turns": [
+        {
+          "input_tokens": 1,
+          "output_tokens": 1
+        }
+      ]
+    }
+  ],
+  "topology": {
+    "areas": [
+      {
+        "area_id": "A",
+        "boundary_node": "gA"
+      },
+      {
+        "area_id": "B",
+        "boundary_node": "gB"
+      }
+    ],
+    "edges": [
+      {
+        "id": "E",
+        "gpu_work_per_second": 10,
+        "gpu_slots": 1,
+        "kv_capacity_bytes": 256,
+        "deployed_models": [
+          "m"
+        ],
+        "area_id": "A"
+      },
+      {
+        "id": "E2",
+        "gpu_work_per_second": 10,
+        "gpu_slots": 1,
+        "kv_capacity_bytes": 256,
+        "deployed_models": [
+          "m"
+        ],
+        "area_id": "B"
+      }
+    ],
+    "links": [
+      {
+        "link_id": "Ea",
+        "source_node": "E",
+        "target_node": "gA",
+        "capacity_bps": 80
+      },
+      {
+        "link_id": "ab",
+        "source_node": "gA",
+        "target_node": "gB",
+        "capacity_bps": 80
+      },
+      {
+        "link_id": "b2",
+        "source_node": "gB",
+        "target_node": "E2",
+        "capacity_bps": 80
+      },
+      {
+        "link_id": "2b",
+        "source_node": "E2",
+        "target_node": "gB",
+        "capacity_bps": 80
+      },
+      {
+        "link_id": "ba",
+        "source_node": "gB",
+        "target_node": "gA",
+        "capacity_bps": 80
+      },
+      {
+        "link_id": "aE",
+        "source_node": "gA",
+        "target_node": "E",
+        "capacity_bps": 80
+      }
+    ],
+    "paths": [
+      {
+        "path_id": "up",
+        "source_node": "E",
+        "target_node": "E2",
+        "link_ids": [
+          "Ea",
+          "ab",
+          "b2"
+        ]
+      },
+      {
+        "path_id": "down",
+        "source_node": "E2",
+        "target_node": "E",
+        "link_ids": [
+          "2b",
+          "ba",
+          "aE"
+        ]
+      }
+    ],
+    "allowed_serving_pairs": [
+      [
+        "E",
+        "E2"
+      ],
+      [
+        "E",
+        "E"
+      ],
+      [
+        "E2",
+        "E"
+      ]
+    ],
+    "mobility_adjacency": {},
+    "mobility_transitions": []
+  }
+}
