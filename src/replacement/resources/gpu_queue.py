@@ -58,6 +58,7 @@ class GPUQueue:
         self._slots = slots
         self._capacity = float(capacity)
         self._records: dict[str, _ReadyRecord] = {}
+        self.fast_snapshots = False
         self._waiting: deque[str] = deque()
         self.trace: list[dict] = []
 
@@ -113,6 +114,21 @@ class GPUQueue:
                 task.consumed_work if task else 0.0,
                 task.remaining_work if task else record.work, status, record.cancelled_time)
         return MappingProxyType(snapshots)
+
+    def task_snapshot(self, task_id):
+        """Same values as tasks[task_id], with constant-size immutable copying."""
+        record = self._records[task_id]
+        task = self._gpu.task_snapshot(task_id)
+        status = ("completed" if record.completion_time is not None else
+                  "cancelled" if record.cancelled_time is not None else
+                  task.status if task is not None else "waiting")
+        wait_end = record.start_time
+        if wait_end is None:
+            wait_end = record.cancelled_time if record.cancelled_time is not None else self.time_s
+        return QueuedTaskSnapshot(task_id, record.ready_time, record.start_time, record.completion_time,
+                    float(Fraction(str(wait_end))-Fraction(str(record.ready_time))),
+                    task.initial_work if task else record.work, task.consumed_work if task else 0.0,
+                    task.remaining_work if task else record.work, status, record.cancelled_time)
 
     def _log(self, event: str, **detail) -> None:
         self.trace.append({"seq": len(self.trace), "time_s": self.time_s,

@@ -8,7 +8,7 @@ from ..simulation.serving import ServingSimulator
 
 
 def run_demo(config, *, network_allocator=None):
-    return ServingSimulator(config, network_allocator=network_allocator).run()
+    return ServingSimulator(config, network_allocator=network_allocator).run(max_events=config.get("max_events",100000))
 
 
 def main():
@@ -28,6 +28,9 @@ def main():
         for name in ("summary", "sessions", "resources", "gpu_events", "kv_events", "output_tokens",
                      "network_flows", "wireless_transfers", "wireless_events"):
             (args.out / (name + ".json")).write_text(json.dumps(result[name], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        for name in ("mobility", "handover", "workload"):
+            if name in result:
+                (args.out / (name+".json")).write_text(json.dumps(result[name], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         # Offline reproducibility config is not handed to an online policy.
         (args.out / "config.json").write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         (args.out / "turns.json").write_text(json.dumps(result["turns"], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

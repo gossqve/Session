@@ -33,8 +33,8 @@ def resolve_wireless_rate(network_config, direction):
 class WirelessRuntime(NetworkRuntime):
     _flow_types = frozenset((FlowType.UPLOAD,FlowType.DOWNLOAD))
 
-    def __init__(self,queue,event_kind='wireless_completion'):
-        super().__init__(queue,None,event_kind=event_kind)
+    def __init__(self,queue,event_kind='wireless_completion', *, compact_history=False):
+        super().__init__(queue,None,event_kind=event_kind,compact_history=compact_history)
 
     def _path(self,path,rate_bps):
         if path is not None:raise ValueError('Wireless transfer has no wired path')

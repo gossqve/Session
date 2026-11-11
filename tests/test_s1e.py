@@ -197,11 +197,19 @@ class S1ETokenTests(unittest.TestCase):
 
     def test_future_mobility_output_and_turns_do_not_change_history(self):
         c = single(outputs=3)
+        # S3-A now owns mobility: use a valid local topology and a future check,
+        # rather than silently accepting the former unsupported placeholder.
+        c["edges"][0]["area_id"] = "A"
+        c["topology"] = {"areas": [{"area_id": "A", "boundary_node": "gA"}],
+                         "edges": copy.deepcopy(c["edges"]), "links": [], "paths": [],
+                         "allowed_serving_pairs": [["E", "E"]],
+                         "mobility_adjacency": {}, "mobility_transitions": []}
+        c["observation_end_s"] = 2
+        c["mobility"] = {"check_interval_s": 1, "transition_probabilities": {"E": {"E": 1}}}
         changed = copy.deepcopy(c)
         changed["sessions"][0]["turns"][0]["output_tokens"] = 8
         changed["sessions"][0]["turns"].append({"input_tokens": 999, "output_tokens": 999})
-        # Reserved unsupported config is private input, never scheduled/read as Mobility.
-        changed["mobility"] = {"seed": 999, "future_access": ["unrevealed"]}
+        changed["seed"] = 999  # different future draws remain private
         a, b = ServingSimulator(c), ServingSimulator(changed)
         a.advance_to(0.3)
         b.advance_to(0.3)

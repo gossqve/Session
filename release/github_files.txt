@@ -19,6 +19,7 @@ configs/s2c_maxmin_pipeline.json
 configs/s2c_maxmin_shared.json
 configs/s2c_maxmin_three_area.json
 configs/s2c_maxmin_wide.json
+configs/s3a_mobility_smoke.json
 docs/ARCHITECTURE.md
 docs/REPOSITORY_FILES.md
 docs/model_spec/2026-11-06-final/Section_III_公式与参考文献依据核对表_最终版.md
@@ -42,6 +43,7 @@ scripts/stress_s2b.py
 scripts/verify_s1e.py
 scripts/verify_s2b.py
 scripts/verify_s2c.py
+scripts/verify_s3a.py
 src/replacement/__init__.py
 src/replacement/cli.py
 src/replacement/core/__init__.py
@@ -71,6 +73,7 @@ src/replacement/resources/gpu_queue.py
 src/replacement/resources/kv.py
 src/replacement/simulation/__init__.py
 src/replacement/simulation/events.py
+src/replacement/simulation/mobility.py
 src/replacement/simulation/s0.py
 src/replacement/simulation/serving.py
 tests/max_min_oracle.py
@@ -83,6 +86,7 @@ tests/test_max_min.py
 tests/test_max_min_oracle.py
 tests/test_max_min_runtime.py
 tests/test_max_min_serving.py
+tests/test_mobility.py
 tests/test_network_runtime.py
 tests/test_network_serving.py
 tests/test_package_layout.py
@@ -91,3 +95,14 @@ tests/test_s1e.py
 tests/test_serving.py
 tests/test_topology.py
 tests/test_turn_gpu.py
+configs/poisson_session_smoke.json
+scripts/verify_workload.py
+src/replacement/core/workload_generation.py
+src/replacement/simulation/handover.py
+src/replacement/simulation/migration_guard.py
+tests/test_compute_bookkeeping.py
+tests/test_generated_serving.py
+tests/test_handover.py
+tests/test_migration_guard.py
+tests/test_transport_history.py
+tests/test_workload_generation.py

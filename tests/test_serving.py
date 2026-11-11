@@ -23,6 +23,10 @@ def config(slots=1, capacity=256):
 
 
 class ServingTests(unittest.TestCase):
+    def test_summary_stage_without_topology_is_s1d(self):
+        out = ServingSimulator(config()).run()
+        self.assertEqual(out["summary"]["stage"], "S1-D")
+
     def test_a_two_session_hand_e2e_prefill_decode_retains_slot(self):
         sim = ServingSimulator(config())
         out = sim.run()

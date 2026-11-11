@@ -28,12 +28,15 @@ class _Record:
 class NetworkRuntime:
     _flow_types = frozenset(FlowType) - {FlowType.UPLOAD,FlowType.DOWNLOAD}
 
-    def __init__(self, queue, topology, allocator=None, event_kind='network_completion'):
+    def __init__(self, queue, topology, allocator=None, event_kind='network_completion', *, compact_history=False):
         self.queue = queue
         self.topology = topology
         self.allocator = allocator if allocator is not None else MaxMinAllocator()
         self.event_kind = event_kind
         self._records = {}
+        self.compact_history = compact_history
+        self._history = {}
+        self._flow_order = []
         self._time = Fraction(0)
         # Never roll this counter back: predictions enqueued by an aborted
         # transaction must not alias a later prediction after state recovery.
@@ -46,12 +49,30 @@ class NetworkRuntime:
 
     @property
     def flows(self):
+        if self.compact_history:
+            return MappingProxyType({k:self.get_flow(k) for k in self._flow_order})
         return MappingProxyType({k: self._snapshot(r) for k,r in self._records.items()})
+
+    def get_flow(self, flow_id):
+        record = self._records.get(flow_id) or self._history.get(flow_id)
+        if record is None:
+            raise ValueError(f'Unknown Flow: {flow_id}')
+        view = self._snapshot(record)
+        return replace(view, last_update_at=self.time_s) if flow_id in self._history else view
+
+    def archive_terminal(self):
+        """Opt-in bookkeeping: completed ledgers leave active scans, not results."""
+        if self.compact_history:
+            for fid,r in tuple(self._records.items()):
+                if r.view.completed_at is not None or r.view.cancelled_at is not None:
+                    self._history[fid] = self._records.pop(fid)
 
     def _snapshot(self, r):
         return replace(r.view, token_boundaries=tuple(r.boundaries), rate_limit_bps=r.override)
 
     def _record(self, flow_id):
+        if flow_id in self._history:
+            self._records[flow_id] = self._history.pop(flow_id)
         if flow_id not in self._records:
             raise ValueError(f'Unknown Flow: {flow_id}')
         return self._records[flow_id]
@@ -76,7 +97,7 @@ class NetworkRuntime:
     def create(self, flow_id, flow_type, session_id, turn_index, time_s, *, path=None,
                rate_bps=None, operation_id=None):
         for value in (flow_id,session_id):identifier(value)
-        if flow_id in self._records:raise ValueError('Duplicate Flow ID')
+        if flow_id in self._records or flow_id in self._history:raise ValueError('Duplicate Flow ID')
         if operation_id is not None:identifier(operation_id)
         if turn_index is not None:integer(turn_index, minimum=0)
         flow_type = FlowType(flow_type)
@@ -86,12 +107,16 @@ class NetworkRuntime:
         f=Flow(flow_id,flow_type,session_id,turn_index,operation_id,path,0,Fraction(0),False,
                FlowStatus.CREATED,self.time_s,None,self.time_s,None,None,0,0,())
         self._records[flow_id]=_Record(f, override=rate_bps)
+        self._flow_order.append(flow_id)
         self._audit(self._records[flow_id], 'created')
         return notices
 
     def _change(self, flow_id, time_s, kind, change):
         self._record(flow_id)
-        saved=deepcopy(self._records)
+        # Flow/FixedPath/TokenBoundary/Fraction values are immutable. Only the
+        # record and its boundary list need copying in compact Poisson mode.
+        saved=({fid:_Record(r.view,list(r.boundaries),r.override,r.forecast)
+                for fid,r in self._records.items()} if self.compact_history else deepcopy(self._records))
         saved_time=self._time
         trace_len=len(self.trace)
         try:
@@ -235,10 +260,14 @@ class NetworkRuntime:
     def _predict(self):
         for r in self._records.values():
             f=r.view
-            self._version+=1
-            r.view=replace(f,event_version=self._version)
-            r.forecast=None
-            if not self._eligible(r) or f.rate_bps==0:continue
+            previous = r.forecast
+            if not self.compact_history:
+                self._version+=1
+                r.view=replace(f,event_version=self._version)
+                r.forecast=None
+            if not self._eligible(r) or f.rate_bps==0:
+                r.forecast=None
+                continue
             boundary=next((b.cumulative_bytes for b in r.boundaries if b.arrived_at is None),f.ready_bytes)
             remaining=boundary-f.transferred_bytes
             if remaining<=0:raise RuntimeError('Unsettled byte boundary')
@@ -250,7 +279,13 @@ class NetworkRuntime:
                 when=math.nextafter(max(when,self.time_s),float('inf'))
             if round(when,12)<=self.time_s:
                 raise ValueError('Clock magnitude cannot represent positive transfer duration')
-            r.forecast=round(when,12)
+            forecast=round(when,12)
+            if self.compact_history:
+                if previous == forecast and forecast > self.time_s:
+                    continue  # existing exact boundary event remains valid
+                self._version+=1
+                r.view=replace(f,event_version=self._version)
+            r.forecast=forecast
             self.queue.schedule(when,self.event_kind,flow_id=f.flow_id,version=r.view.event_version)
 
     def advance(self, time_s):
@@ -262,14 +297,19 @@ class NetworkRuntime:
             raise ValueError('Cannot skip next transport boundary; dispatch shared EventQueue')
         delta=target-self._time
         self._time=target
+        drained=False
         for r in self._records.values():
             f=r.view
             amount=min(f.pending_bytes,_exact(f.rate_bps)*delta/8) if self._eligible(r) else 0
             r.view=replace(f,transferred_bytes=f.transferred_bytes+amount,last_update_at=self.time_s)
+            if amount and amount==f.pending_bytes:drained=True
+            if not 0<=r.view.transferred_bytes<=r.view.ready_bytes:
+                raise RuntimeError('Flow byte conservation violated')
             if amount:self._audit(r,'progress')
         notices=self._settle_boundaries()
-        self._allocate('boundary' if notices else 'advance')
-        self._predict()
+        if not self.compact_history or notices or drained:
+            self._allocate('boundary' if notices else 'advance')
+            self._predict()
         return tuple(notices)
 
     def is_current_event(self,event):

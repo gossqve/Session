@@ -1,6 +1,6 @@
 # Stateful AI Session Re-placement
 
-当前状态：S1 已完成最终清理；S2-A 静态拓扑、S2-B 真实 Flow/字节推进与 S2-C 无权 Max-Min 已接入 Serving。无拓扑配置时仍使用本地 S1；启用拓扑可运行固定远程 Access/Execution。
+当前状态：已增加 Poisson 私有 Session 工作负载，以及显式启用的 S3-B 实际 Handover/Draining；默认仍保留原静态与 S3-A 计划模式。S1 已完成最终清理；S2-A 静态拓扑、S2-B 真实 Flow/字节推进与 S2-C 无权 Max-Min 已接入 Serving。无拓扑配置时仍使用本地 S1；启用拓扑可运行固定远程 Access/Execution。
 建模依据是 2026-11-06 Section III（含可达性补充）、用户删除优先级/抢占/旧选择器的覆盖，以及本次最终清理要求。
 当前复现说明：[架构与验收入口](docs/ARCHITECTURE.md)；[文件保留与发布规范](docs/REPOSITORY_FILES.md)。
 
@@ -45,7 +45,7 @@ Pending恢复不重算，后续新计算重新FCFS。底层atomic API仍用于�
 有任意计划Turn未正常完成时，全量平均E2E为null；p95明确为正常完成子集。
 
 S1固定Access=Execution，无线每用户独立有效速率。无H/L服务优先级、抢占、内部模型选择器。
-EventQueue.priority仅表示同刻事件处理阶段。S2-B已实现真实网络传输；共享有向链路现由正式Max-Min动态分配。S3独立秒级Markov/Handover、S4迁移、后续策略/PPO尚未实现。
+EventQueue.priority仅表示同刻事件处理阶段。S2-B已实现真实网络传输；共享有向链路现由正式Max-Min动态分配。S3-A独立时间Markov计划/Pending已实现；S3-B实际Handover/Draining可显式启用；S4迁移、后续策略/PPO尚未实现。
 合成参数用于手算验证，不是实际硬件性能或论文实验结果。
 
 ## 数据与配置边界
@@ -133,3 +133,7 @@ verify_s2c从同一轨迹导出flow_rates/link_utilization/flow_bytes三份JSONL
 S2-B历史拒绝反例现在必须显式选择`--allocator disjoint`；verify_s2b已这样指定，其他场景使用正式Max-Min默认。
 旧S2-B文档中的“默认拒绝共享”仅为阶段历史。正的外部rate_limit仅是既有传输速率上限，不是业务权重；0表示显式暂停。
 复现说明：[ARCHITECTURE](docs/ARCHITECTURE.md)；S2-C 阶段报告仅本地归档。
+
+S3-A 验收：`python scripts/verify_s3a.py`；仅生成计划与 Pending，不切换实际 Access。具体输出和边界见 [ARCHITECTURE](docs/ARCHITECTURE.md)。
+
+Poisson 综合验收：`python scripts/verify_workload.py`。配置为 `configs/poisson_session_smoke.json`；真实 KV Copy/Cutover 未实现，仅提供单在途 Migration Admission Guard。参数、复现与信息边界见 [ARCHITECTURE](docs/ARCHITECTURE.md)。

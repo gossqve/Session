@@ -84,6 +84,12 @@ class EqualShareGPU:
                                  float(t.initial - t.remaining), float(t.remaining), t.status)
                                  for key, t in self._ordered()})
 
+    def task_snapshot(self, task_id):
+        """Read one immutable task view without rebuilding all historical views."""
+        task = self._tasks.get(task_id)
+        return None if task is None else TaskSnapshot(task_id, float(task.initial),
+                    float(task.initial-task.remaining), float(task.remaining), task.status)
+
     @property
     def rates(self) -> dict[str, float]:
         active = [(key, t) for key, t in self._ordered() if t.status in ("running", "awaiting_unit")]

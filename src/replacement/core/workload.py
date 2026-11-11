@@ -42,6 +42,7 @@ class RevealedRequest:
 class WorkloadDriver:
     def __init__(self, plan: WorkloadPlan):
         self._plan = plan
+        self._generated = False
         self._sessions = {}
         for session in plan.sessions:
             for value in (session.session_id, session.model_id, session.access_edge_id, session.execution_edge_id):
@@ -85,7 +86,36 @@ class WorkloadDriver:
                             text_bytes_per_token=s.text_bytes_per_token)
 
     @classmethod
-    def from_serving_config(cls, config):
+    def from_serving_config(cls, config, *, plan=None):
+        spec = config.get("workload", {})
+        if not isinstance(spec, dict) or spec.get("mode", "static") not in ("static", "poisson"):
+            raise ValueError("workload.mode must be static or poisson")
+        if spec.get("mode") == "poisson":
+            if "sessions" in config:
+                raise ValueError("Poisson input cannot also declare static sessions")
+            from .workload_generation import WorkloadGenerator
+            generator = WorkloadGenerator(config)
+            generator.validate()
+            plan = generator.generate() if plan is None else plan
+            if not isinstance(plan, WorkloadPlan) or plan.seed != config.get("seed", 0):
+                raise ValueError("Reusable WorkloadPlan must use the common seed")
+            driver = cls(plan)
+            eligible = {e["id"] for e in config["edges"] if spec["model_id"] in e["deployed_models"]}
+            for session in plan.sessions:
+                if (session.model_id != spec["model_id"] or session.access_edge_id not in eligible
+                        or session.execution_edge_id != session.access_edge_id
+                        or not 0 < session.arrival_time <= spec["arrival_horizon_s"]):
+                    raise ValueError("Reusable Session has invalid initial binding or arrival")
+                if not spec["turn_count"]["min"] <= len(session.turns) <= spec["turn_count"]["max"]:
+                    raise ValueError("Reusable Session Turn count is outside configured bounds")
+                for turn in session.turns:
+                    if (not spec["input_tokens"]["min"] <= turn.input_tokens <= spec["input_tokens"]["max"]
+                            or not spec["output_tokens"]["min"] <= turn.hidden_output_tokens <= spec["output_tokens"]["max"]):
+                        raise ValueError("Reusable Turn lengths are outside configured bounds")
+            driver._generated = True
+            return driver
+        if plan is not None:
+            raise ValueError("Explicit reusable plans require poisson workload mode")
         cls._validate_turn_schema(config["sessions"])
         plans = []
         for s in config["sessions"]:
@@ -141,3 +171,42 @@ class WorkloadDriver:
         """Offline final reporting only, never part of RuntimeState/observation."""
         return {"scenario": self._plan.scenario, "seed": self._plan.seed,
                 "planned_turns": sum(len(s.turns) for s in self._plan.sessions)}
+
+    @property
+    def generated(self):
+        return self._generated
+
+    def mobility_initial_states(self):
+        """Private static reachability validation, not an online observation."""
+        return tuple(dict(id=s.session_id, arrival_time=s.arrival_time,
+                          access_edge_id=s.access_edge_id, execution_edge_id=s.execution_edge_id)
+                     for s in self._plan.sessions)
+
+    def evaluation_workload(self, runtime):
+        """Offline report only. Never pass this full plan or statistics to policy."""
+        from .workload_generation import workload_to_dict, workload_hash
+        sessions = list(runtime.sessions.values())
+        ended = [s for s in sessions if s.status == "ended"]
+        context = [s for s in sessions if s.termination_reason == "ContextLimit"]
+        failed = [s for s in sessions if s.status == "failed"]
+        exceeded = sum(sum(t.input_tokens + t.hidden_output_tokens for t in s.turns)
+                       > runtime.models[s.model_id].context_window_tokens for s in self._plan.sessions)
+        lifetimes = [dict(session_id=s.session_id, arrival_time=s.arrival_time,
+                          end_time=s.end_time, lifetime_s=round(s.end_time-s.arrival_time,12)
+                          if s.end_time is not None else None,
+                          observed_lifetime_s=round((s.end_time if s.end_time is not None
+                                                   else runtime.time_s)-s.arrival_time,12),
+                          context_tokens=s.context_tokens, termination_reason=s.termination_reason)
+                     for s in sessions]
+        total = len(sessions)
+        return dict(plan=workload_to_dict(self._plan), workload_hash=workload_hash(self._plan),
+                    statistics=dict(planned_sessions=len(self._plan.sessions), arrived_sessions=total,
+                                    completed_sessions=len(ended), legally_terminated_sessions=len(failed),
+                                    unfinished_sessions=total-len(ended)-len(failed),
+                                    planned_context_exceedances=exceeded, context_limit_sessions=len(context),
+                                    context_limit_ratio=len(context)/total if total else None,
+                                    completed_session_ratio=len(ended)/total if total else None,
+                                    kv_blocked_ratio=sum(any(t.block_count for t in s.turns) for s in sessions)/total if total else None,
+                                    planned_token_totals=[dict(session_id=s.session_id,
+                                        tokens=sum(t.input_tokens+t.hidden_output_tokens for t in s.turns))
+                                        for s in self._plan.sessions], session_lifetimes=lifetimes))

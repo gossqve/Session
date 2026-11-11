@@ -1,5 +1,6 @@
 """Explicit policy whitelist: frozen value DTOs without source object references."""
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from fractions import Fraction
 
 from .runtime import RuntimeState
 
@@ -82,6 +83,40 @@ class OnlineObservation:
     edges: tuple[EdgeObservation, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class TransferObservation:
+    flow_id: str
+    session_id: str
+    turn_index: int | None
+    flow_type: str
+    path_id: str | None
+    link_ids: tuple[str, ...]
+    ready_bytes: int
+    transferred_bytes: float
+    rate_bps: float
+    status: str
+
+
+@dataclass(frozen=True, slots=True)
+class HandoverObservation:
+    session_id: str
+    draining: bool
+    prompt_protected: bool
+    wireless_busy: bool
+    pending_depth: int
+    last_actual_access_change_s: float | None
+    migration_source_edge_id: str | None
+    migration_target_edge_id: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class ServingObservation(OnlineObservation):
+    """Opt-in current transport/control values, never resource/controller objects."""
+    network_transfers: tuple[TransferObservation, ...]
+    wireless_transfers: tuple[TransferObservation, ...]
+    handover_states: tuple[HandoverObservation, ...]
+
+
 def _task(t):
     return TaskObservation(t.task_id, t.session_id, t.turn_index, t.phase.value,
                            t.unit_index, t.execution_edge_id, t.remaining_work,
@@ -112,3 +147,34 @@ def observe(runtime: RuntimeState) -> OnlineObservation:
         edge.resident_session_ids, tuple(_task(t) for t in edge.running_tasks),
         tuple(_task(t) for t in edge.ready_queue), edge.area_id) for _, edge in sorted(runtime.edges.items()))
     return OnlineObservation(runtime.time_s, tuple(sessions), edges)
+
+
+def project_service(current, runtime):
+    """Value-only settlement of known current units, without mutating traces.
+
+All due completions precede a mobility event. Thus a lagging lazy resource
+clock can only have service inside its current already-known unit, never a
+future Token/Turn. This is used only by the opt-in extended Serving DTO.
+"""
+    progress, edges = {}, []
+    for edge in current.edges:
+        scheduler = runtime.edges[edge.edge_id].compute.scheduler
+        elapsed = Fraction(str(runtime.time_s)) - Fraction(str(scheduler.time_s))
+        share = Fraction(str(edge.gpu_capacity)) / len(edge.running) if edge.running else Fraction(0)
+        running = []
+        for task in edge.running:
+            amount = float(min(Fraction(str(task.remaining_work)), elapsed * share))
+            progress[(task.session_id, task.turn_index)] = amount
+            running.append(replace(task, remaining_work=round(task.remaining_work-amount,12),
+                                   consumed_work=round(task.consumed_work+amount,12)))
+        edges.append(replace(edge, running=tuple(running)))
+    sessions = []
+    for session in current.sessions:
+        turn = session.current_turn
+        if turn is not None:
+            amount = progress.get((session.session_id,turn.index),0)
+            turn = replace(turn, remaining_gpu_work=round(turn.remaining_gpu_work-amount,12),
+                           partial_work=round(turn.partial_work+amount,12),
+                           gpu_service_work=round(turn.gpu_service_work+amount,12))
+        sessions.append(replace(session,current_turn=turn))
+    return replace(current, sessions=tuple(sessions), edges=tuple(edges))

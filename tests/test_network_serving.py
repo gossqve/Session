@@ -23,6 +23,10 @@ def remote(outputs=1):
     return c
 
 class NetworkServingTests(unittest.TestCase):
+    def test_summary_stage_with_topology_is_s2c(self):
+        out = ServingSimulator(remote()).run()
+        self.assertEqual(out["summary"]["stage"], "S2-C")
+
     def test_remote_hand_timeline_and_logical_byte_counts(self):
         sim=ServingSimulator(remote());out=sim.run()
         self.assertEqual(out["turns"][0]["e2e_s"],0.6)

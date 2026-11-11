@@ -39,7 +39,8 @@ class GPUComputeTask:
 
     @property
     def _snapshot(self):
-        return self._scheduler.tasks[self.resource_id]
+        return (self._scheduler.task_snapshot(self.resource_id) if self._scheduler.fast_snapshots
+                else self._scheduler.tasks[self.resource_id])
 
     @property
     def remaining_work(self):
@@ -80,6 +81,8 @@ class ComputeRegistry:
         self.scheduler = GPUQueue(queue, edge.edge_id, edge.gpu_capacity, edge.gpu_slots)
         self._tasks: dict[str, GPUComputeTask] = {}
         self._turns: dict[str, TurnState] = {}
+        self.compact_sync = False
+        self._sync_candidates = {}
         self._runtime = None
         self._lease_units: dict[str, str] = {}
         self._lease_owners: dict[str, tuple[str, int]] = {}
@@ -100,7 +103,8 @@ class ComputeRegistry:
             if task._timing:
                 task._timing.completed = completion.time_s
             resolved.append(task)
-        for key, task in self._tasks.items():
+        candidates = tuple(self._sync_candidates.items()) if self.compact_sync else self._tasks.items()
+        for key, task in candidates:
             if task._timing and task._timing.start is None:
                 task._timing.start = task._snapshot.start_time
             turn = self._turns[key]
@@ -108,6 +112,9 @@ class ComputeRegistry:
                 turn.gpu_start_time = task.start_time
             if turn.compute_task is task and turn.status not in ("blocked", "completed", "failed"):
                 turn.wait_reason = "GPUQueue" if task.status == "waiting" else None
+            if ((task._timing is not None and task._timing.completed is not None)
+                    or (task._timing is None and task.status in ("completed", "cancelled"))):
+                self._sync_candidates.pop(key, None)
         return tuple(resolved)
 
     def task_for_resource(self, resource_id):
@@ -115,13 +122,15 @@ class ComputeRegistry:
 
     def _active_lease(self, session_id, turn_index):
         keys = [key for key, owner in self._lease_owners.items() if owner == (session_id, turn_index)
-                and self.scheduler.tasks[key].status not in ("completed", "cancelled")]
+                and (self.scheduler.task_snapshot(key) if self.scheduler.fast_snapshots else self.scheduler.tasks[key]).status
+                not in ("completed", "cancelled")]
         if len(keys) > 1:
             raise RuntimeError("Turn owns multiple active GPU slots")
         return keys[0] if keys else None
 
     def queue_wait(self, session_id, turn_index):
-        return sum(self.scheduler.tasks[key].queue_wait_s for key, owner in self._lease_owners.items()
+        return sum((self.scheduler.task_snapshot(key) if self.scheduler.fast_snapshots else self.scheduler.tasks[key]).queue_wait_s
+                   for key, owner in self._lease_owners.items()
                    if owner == (session_id, turn_index))
 
     def service_work(self, session_id, turn_index):
@@ -176,6 +185,7 @@ class ComputeRegistry:
         task = GPUComputeTask(task_id, session.session_id, turn.index, phase, unit_index,
                               self.edge.edge_id, self.scheduler, resource_id, timing)
         self._tasks[task_id] = task
+        self._sync_candidates[task_id] = task
         self._turns[task_id] = turn
         if continuous:
             self._lease_units[resource_id] = task_id

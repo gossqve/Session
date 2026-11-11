@@ -1,4 +1,4 @@
-# S0–S2 reproduction and architecture
+# S0–S3-A reproduction and architecture
 
 Python 3.10+, standard library. Run from repository root:
 
@@ -65,5 +65,155 @@ Simulation results include Flow/Link rate and utilization traces, G/Y Byte
 progress, Token/Turn/Session records, GPU/KV records and offline config copies.
 These are outputs under `runs/`; they are not test inputs or publishable source.
 
-S3 actual Markov/Handover/Draining, S4 migration/Shadow/Cutover and later policies
-are future work. No performance claim for real hardware or model weights is made.
+S3-A planned-only Markov/Pending is described below. Opt-in S3-B actual Handover/Draining
+is described in the dated Poisson section. S3-C full formal integration, S4
+migration/Shadow/Cutover and later policies remain future work.
+No performance claim for real hardware or model weights is made.
+
+## S3-A Mobility Workload and Pending State
+
+`simulation/mobility.py` owns frozen PendingMove and per-Session MobilitySessionState
+(planned Access, deque, checks/changes/depth/cancellation counters). Actual Access
+is read only from core SessionState. No second Session/Flow/KV entity is introduced.
+`mobility` requires topology and finite `observation_end_s` (T_obs); all registered
+Edges need a probability row. Exact decimal Fraction sums must equal 1. Every
+positive non-self edge needs adjacency and its directed path; every transitive
+reachable Access needs allowed membership and both serving directions to fixed
+Execution. Checks start only after actual arrival, at arrival+n*interval, not at
+Turn completion. Intervals below the existing 1e-12s queue resolution are rejected.
+
+Draw format is compact UTF-8 JSON `[seed,session_id,check_index]`; SHA-256 first
+8 bytes in big-endian order divided by 2**64. Sorted Edge IDs and previous planned
+row determine the next plan. Only one next check is scheduled. Events contain only
+already-experienced checks and edges. Pending preserves all adjacent edges FIFO;
+self transitions do not enqueue. It is not consumed in this stage.
+
+GPU20/KV25/Serving30/transport50 precede mobility80 and checkpoint90. Mobility-only
+planning does not change rates/activity or inspect partial work; resources keep
+lazy exact settlement at original service events/checkpoints, preserving all core
+traces. Actual Handover will need affected-resource settlement in S3-B. Every
+Serving Session end path notifies MobilityRuntime; logical invalidation skips old
+checks before the clock advances. End clears Pending with cancellation counters,
+retaining history. KVBlocked alone does not end the Session. max_pending_depth is
+the maximum single Session FIFO depth, not the sum of simultaneous queues.
+
+Mobility run() uses advance_to(T_obs); boundary checks are included unless Session
+termination at that instant wins. Unfinished Sessions and Pending remain real.
+T_obs, future turns, probabilities and random seed are absent from OnlineObservation.
+Without mobility, existing run(), result schema and resource behavior are unchanged.
+Stage is S1-D without topology, S2-C with topology, S3-A with enabled mobility.
+
+S3-A results append only `mobility={summary,sessions,events}`; CLI --out additionally
+writes mobility.json. Aggregate summary fields: mobility_checks, planned_access_changes,
+pending_moves_added/cancelled, max_pending_depth, pending_moves_at_observation_end.
+Per-Session rows distinguish initial/planned/actual Access and fixed Execution.
+No Actual Handover completion record, new objective function or optimization exists.
+User's latest objective direction is weighted latency and Overhead, reserved for later stages.
+
+```powershell
+python -m unittest discover -s tests -p test_mobility.py -v
+python scripts/verify_s3a.py
+```
+
+The verifier runs full tests and both S1/S2 verifiers, CLI smoke on the existing
+six-Edge topology plus required paths, and exact core-result comparison against
+mobility-disabled Serving at the same T_obs. All outputs use new runs/s3a_* paths.
+
+
+## Poisson workload and opt-in actual Handover (2026-11-11)
+
+`core/workload_generation.py` generates the existing immutable WorkloadPlan with
+separate SHA-256-derived stdlib Random streams for arrivals, initial Edge, Turn
+count, Input and Output. First arrival is exponential. Integer bounds include
+both endpoints. Arrival horizon bounds only creation, not Session lifetime.
+At clock resolution boundaries in-window arrivals are retained, rounded and
+clamped to the first/final legal 1e-12s tick; same-tick arrivals keep stable IDs.
+Selected fixed model must exist, output max must equal its output_limit_per_turn,
+and initial Access=Execution is uniformly drawn from sorted deployed Edges.
+No context-total admission filter, cropping, retries or DurationSampler exists.
+
+Config: `workload.mode` defaults to static; poisson requires arrival_rate_per_s,
+arrival_horizon_s, model_id and turn_count/input_tokens/output_tokens min/max.
+It cannot also supply static sessions. `observation_end_s` is finite and at least
+the arrival horizon. It is a global cutoff, also without Mobility; events at
+cutoff execute through checkpoint90, later events never execute. Zero arrivals
+end normally, with undefined means/ratios represented by null.
+
+`ServingSimulator(config, workload_plan=plan)` accepts a validated shared frozen
+Poisson plan, without sampling a new one. workload_to_dict/from_dict and
+workload_hash support complete offline replay. The Driver owns all future data;
+results.workload and CLI workload.json are explicitly offline artifacts only.
+Poisson reporting separates completed/legally-terminated/unfinished Sessions,
+planned context exceedances, actual ContextLimit/KVBlocked ratios and actual or
+censored lifetimes. Mean Full-Turn E2E retains the complete planned denominator;
+ContextLimit can make it null even when every Session has legally ended.
+
+Completion now checks the private target before output cap: target==cap ends
+normally; a static target above cap still ends with OutputLengthLimit. The
+existing atomic Session Context and physical KV checks remain authoritative.
+
+`mobility.min_inter_move_interval_s` defaults to0. A Markov proposal inside the
+interval after the last accepted plan change is rejected without updating planned
+Access or adding Pending; checks/RNG indexing continue. Optional counters separate
+proposals, rejections and accepted changes. Unconfigured S3-A outputs are unchanged.
+
+`handover.enabled=true` is an explicit opt-in requiring mobility, stage S3-B.
+Disabled/absent retains original S3-A planned-only mode. Controller is in
+simulation/handover.py. It protects the entire actually-started Prompt through
+Execution arrival and any already-started wireless Token. Pending pauses starting
+the next wireless Token. Actual changes consume the first adjacent FIFO edge,
+respect min actual intervals, allow at most one change per timestamp, and never
+change Execution/KV or frozen OutputToken provenance.
+
+An actual switch freezes undelivered old Tokens and closes their old original
+response producer without canceling Byte progress. All frozen Tokens first finish
+the original wired stage to old Access. A real FlowType.HANDOVER on old->new fixed
+path then competes for Max-Min capacity. Each complete forwarded Token can enter
+wireless immediately, without waiting for the whole forwarding batch. New generated
+Tokens buffer until the old set is fully delivered. Draining prevents another
+actual switch. One Turn never holds multiple simultaneous wired response shares.
+GPU generation continues under existing constraints. Turn submit remains zero Idle
+at30; new Prompt starts85 after actual Handover80, using the latest actual Access.
+Completed/incomplete draining durations are reported distinctly.
+
+The new ServingObservation extends frozen current-only DTOs with created transfer
+Byte/rate/path/status and current Handover/protection/Pending-depth/guard values.
+It contains no Driver, plan, RNG or event queue. Known partial GPU service and
+Byte progress may be projected to the current clock (bits/8) without resource or
+trace mutation. Legacy observation DTOs remain unchanged. No policy algorithm or
+objective function is introduced.
+
+simulation/migration_guard.py provides immutable per-Session MigrationLease and
+MigrationAdmissionGuard.try_begin/complete/fail. Duplicate active requests return
+None and increment rejection count. Source/Target are fixed. Stale/foreign leases
+cannot release another operation. There is no cancel/retarget/replay queue.
+Complete requires the future S4 caller to establish real completion/Cutover; the
+Guard itself performs no Copy or Cutover. Session end releases a remaining lease
+with session_end failure. Access Handover does not check or acquire this lock.
+
+For real Poisson sizes the same transport kernel uses compact_history=True:
+terminal records leave active scans but remain in immutable result history and
+ID uniqueness checks. Transactions copy mutable records/boundary lists while
+sharing frozen Flow/Path/TokenBoundary/Fraction values. Unchanged future exact
+forecasts retain their valid queued event; real changes allocate monotonically
+increasing versions, including across rollback. Physical Byte equations,
+Max-Min/independent wireless rates and capacity checks are unchanged. Historical
+static/S3-A retains the original bookkeeping/trace path. Compact-mode allocation
+traces show current records; diagnostic event_version values can differ from
+noncompact replay, while physical bytes/times/notices are tested equal.
+
+```powershell
+python -m unittest discover -s tests -v
+python scripts/verify_s1e.py
+python scripts/verify_s2c.py
+python scripts/verify_s3a.py
+python scripts/verify_workload.py
+```
+
+`configs/poisson_session_smoke.json` uses temporary lambda=.05, arrivals600s,
+Tobs900s, J2..5, I40..120, O80..200, native model context1200, min moves60s.
+All are functional-test values, not paper-calibrated hardware parameters.
+The explicit config max_events is a finite executor safety guard (default100000),
+not a Session admission cap or model constraint. All generated artifacts stay
+under runs/. Current publication lists are maintained separately per user review;
+do not assume a previous-stage package includes newly introduced dependencies.

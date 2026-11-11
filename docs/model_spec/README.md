@@ -1,5 +1,9 @@
 # 当前正式建模与历史材料索引
 
+当前（2026-11-11）：已增加 Poisson Session 私有工作负载、独立到达/观察窗口、确定性独立随机流、严格模型输出上限一致性、当前状态 DTO 隔离、可配置最小移动间隔，以及显式启用的 III.B.3 Actual Handover/Draining。原静态/S3-A 计划模式保留。Migration Admission Guard 仅限制单 Session 单在途准入，不是 KV Copy/Cutover。具体接口见 ARCHITECTURE；数学正文及优化目标未改，仍以用户确定的完整 Turn E2E 与迁移开销加权方向为准。
+
+当前 S3-A（2026-11-10）：已实现 Section III.B.3 式(5)/(5a)/(5b) 的到达相对固定移动检查、按需确定性 Markov 计划、Pending FIFO、生命周期清理与有限 T_obs，接入真实 ServingSimulator。实际 Access/Execution、权威 KV、Token 来源和 Flow 路径不变。实际 Handover/Draining 留 S3-B，完整 S3 集成留 S3-C，不能宣称整个 B.3 已完成。最新优化方向是时延与 Overhead 的加权联合优化；本轮不实现目标函数或策略，旧版仅时延表述不作为新优化开发依据。原始数学建模正文未修改。
+
 当前复现入口见 [ARCHITECTURE](../ARCHITECTURE.md)，文件发布规则见 [REPOSITORY_FILES](../REPOSITORY_FILES.md)。
 下列阶段历史报告保留在 Windows 本地，不是运行或测试依赖。原始模型正文保持原字节。
 
