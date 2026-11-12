@@ -106,3 +106,11 @@ tests/test_handover.py
 tests/test_migration_guard.py
 tests/test_transport_history.py
 tests/test_workload_generation.py
+tests/test_handover_completion.py
+scripts/verify_s3b.py
+configs/s3c_hand_shared.json
+src/replacement/simulation/evaluation.py
+tests/test_s3c_integration.py
+tests/test_s3c_evaluation.py
+scripts/verify_s3c.py
+tests/test_s3c_audit.py

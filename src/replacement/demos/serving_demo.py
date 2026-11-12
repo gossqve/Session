@@ -28,7 +28,7 @@ def main():
         for name in ("summary", "sessions", "resources", "gpu_events", "kv_events", "output_tokens",
                      "network_flows", "wireless_transfers", "wireless_events"):
             (args.out / (name + ".json")).write_text(json.dumps(result[name], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        for name in ("mobility", "handover", "workload"):
+        for name in ("mobility", "handover", "workload", "evaluation"):
             if name in result:
                 (args.out / (name+".json")).write_text(json.dumps(result[name], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         # Offline reproducibility config is not handed to an online policy.

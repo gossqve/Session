@@ -217,3 +217,41 @@ The explicit config max_events is a finite executor safety guard (default100000)
 not a Session admission cap or model constraint. All generated artifacts stay
 under runs/. Current publication lists are maintained separately per user review;
 do not assume a previous-stage package includes newly introduced dependencies.
+
+## S3-C integration acceptance (2026-11-12)
+
+`python scripts/verify_s3c.py --out runs/a_new_s3c_directory` runs S3-C directed
+tests, the existing S3-A chain (full unittest, S2-C Oracle and S1 regressions),
+S3-B's normal/incomplete Poisson integration, and the deterministic three-Session
+`configs/s3c_hand_shared.json`. It audits raw GPU service integrals, structural KV
+commit/release deltas, prior-rate Byte progression, frozen Token provenance, UE
+completion and censoring. Small shared allocations use the independent rational
+vertex Oracle. No second simulator or resource ledger is introduced.
+
+Actual-Handover mode defers new wireless Token starts to phase85, after same-clock
+due mobility80, including when the move was not yet Pending at UE completion.
+Already-started Tokens remain protected. All configured finite Serving cutoffs
+own a terminal phase90 checkpoint, including direct step() callers; run() and
+advance_to() reuse it. No-horizon historical execution is unchanged.
+
+Enabled Handover results/CLI additionally include offline `evaluation` /
+`evaluation.json`, derived from existing records by simulation/evaluation.py.
+It records unsubmitted and submitted unfinished counts, current waiting reasons,
+right-censored E2E lower bounds only for still-live Turns (terminated failures
+are separate), and actual HANDOVER Flow Y Byte independently of original response
+and wireless Byte. `p95_full_turn_e2e_s` in this evaluation explicitly describes
+the normally completed subset, not a full-population estimate. Original summary
+fields retain their canonical names, values and stage labels. The formal G1 metric
+is `evaluation.summary.mean_completed_full_turn_e2e_s`: sum actual normal completed
+Turn delays divided by their count, including legal zero-output completion; null
+only when that count is zero. It uses the same completed subset as P95. Completion
+rate, censoring bounds, terminated and unsubmitted Turns remain separately reported.
+The old `mean_full_turn_e2e_s` stays null unless all planned Turns complete normally;
+it is a legacy complete-data diagnostic and must not be used for G1. `g1_metric`
+and explicit scope fields identify these semantics. GPU busy time sums active Edge
+seconds; running Turn time integrates active Turn counts. These are raw metrics,
+not an objective function. Evaluation is never included in online DTOs.
+
+S4 KV Copy/Shadow/STOP/Cutover, joint Check scheduling and Re-placement policies
+remain outside this stage. Actual handover_start events supply the real movement
+trigger record; no policy or migration is inferred from a plan or drain completion.

@@ -43,6 +43,9 @@ GPU按Turn占并发名额，FCFS进入、动态Equal-Share；连续Prefill/Decod
 Pending恢复不重算，后续新计算重新FCFS。底层atomic API仍用于真实的资源验证/S0，不是第二套调度器。
 完整响应按FIFO送达后Turn才完成；下一轮同刻提交。E2E直接取接收减提交，不重复累计重叠时段。
 有任意计划Turn未正常完成时，全量平均E2E为null；p95明确为正常完成子集。
+该全量字段 `mean_full_turn_e2e_s` 保留为历史完整数据诊断，不是 G1。
+正式 G1 使用 `evaluation.summary.mean_completed_full_turn_e2e_s`，以正常完成 Turn 数为分母，
+包括合法零输出 Turn；仅零完成时为 null。完成率、异常终止、删失和未提交数量分别报告。
 
 S1固定Access=Execution，无线每用户独立有效速率。无H/L服务优先级、抢占、内部模型选择器。
 EventQueue.priority仅表示同刻事件处理阶段。S2-B已实现真实网络传输；共享有向链路现由正式Max-Min动态分配。S3-A独立时间Markov计划/Pending已实现；S3-B实际Handover/Draining可显式启用；S4迁移、后续策略/PPO尚未实现。
@@ -137,3 +140,5 @@ S2-B历史拒绝反例现在必须显式选择`--allocator disjoint`；verify_s2
 S3-A 验收：`python scripts/verify_s3a.py`；仅生成计划与 Pending，不切换实际 Access。具体输出和边界见 [ARCHITECTURE](docs/ARCHITECTURE.md)。
 
 Poisson 综合验收：`python scripts/verify_workload.py`。配置为 `configs/poisson_session_smoke.json`；真实 KV Copy/Cutover 未实现，仅提供单在途 Migration Admission Guard。参数、复现与信息边界见 [ARCHITECTURE](docs/ARCHITECTURE.md)。
+
+S3-C 全局验收：`python scripts/verify_s3c.py`。复用 S1/S2/S3-A/B 验收链，增加三 Session 手算综合配置、资源轨迹守恒审计和离线删失/额外转发指标；详见 ARCHITECTURE 的 S3-C 章节。输出仅保存至新的 `runs/` 目录，不执行发布或服务器操作。

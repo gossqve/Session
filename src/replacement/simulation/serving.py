@@ -66,11 +66,15 @@ class ServingSimulator:
         self._network = {}
         self._downlink = {}
         self._downlink_busy = set()
+        self._downlink_scheduled = {}
         self.events = []
         self.ignored_predictions = 0
         self._raw_events = 0
         self._max_events = 100000
         self._peak_kv = 0
+        if self._observation_end_s is not None:
+            # A global terminal checkpoint also protects callers using step().
+            self.queue.schedule(self._observation_end_s, "serving_checkpoint", priority=90)
 
     @property
     def time_s(self):
@@ -336,6 +340,18 @@ class ServingSimulator:
         self._maybe_finish(sid)
 
     def _start_downlink(self, sid):
+        if sid in self._downlink_busy or not self._downlink[sid]:
+            return
+        if self.handover is not None:
+            # B.3: settle UE delivery, then due moves, then new transmissions.
+            # A move due now must protect the boundary even before it is Pending.
+            if self._downlink_scheduled.get(sid) != self.time_s:
+                self._downlink_scheduled[sid] = self.time_s
+                self.queue.schedule(self.time_s, "handover_downlink", priority=85, session_id=sid)
+            return
+        self._begin_downlink(sid)
+
+    def _begin_downlink(self, sid):
         if self.handover is not None and self.handover.hold_wireless(sid):
             return
         if sid in self._downlink_busy or not self._downlink[sid]:
@@ -422,6 +438,8 @@ class ServingSimulator:
                 continue
             if event.kind == "handover_upload" and self._pending_uploads.get(event.payload.get("session_id")) != event.payload.get("turn_index"):
                 continue
+            if event.kind == "handover_downlink" and self._downlink_scheduled.get(event.payload.get("session_id")) != event.time:
+                continue
             break
         else:
             return None
@@ -446,10 +464,16 @@ class ServingSimulator:
                 completed.extend(edge.compute.handle_event(event))
             else:
                 completed.extend(edge.compute.advance(event.time))
+        if self.handover is not None:
+            # B.3 same-clock settlement: legal GPU/KV commits precede wired
+            # arrivals and UE delivery. Preserve historical planned-only traces.
+            for task in completed:
+                self._gpu_done(task)
         for transport, notices in arrivals:
             self._transport_notices(transport, notices)
-        for task in completed:
-            self._gpu_done(task)
+        if self.handover is None:
+            for task in completed:
+                self._gpu_done(task)
         sid = event.payload.get("session_id")
         if event.kind == "serving_arrival":
             self._arrive(sid)
@@ -465,11 +489,16 @@ class ServingSimulator:
             self.handover.handle_event(event)
         elif event.kind == "handover_upload":
             self._begin_upload(sid)
+        elif event.kind == "handover_downlink":
+            self._downlink_scheduled.pop(sid, None)
+            self._begin_downlink(sid)
         elif event.kind not in ("gpu_completion", "serving_checkpoint", "network_completion", "wireless_completion"):
             raise RuntimeError(f"Unknown serving event: {event.kind}")
         self._resources_snapshot()
         if self.handover is not None and event.priority < 80:
             self.handover.schedule_checks()
+        if event.kind == "serving_checkpoint" and event.time == self._observation_end_s:
+            self._observation_finished = True
         return event.time, event.kind
 
     def advance_to(self, time_s):
@@ -481,7 +510,8 @@ class ServingSimulator:
             raise ValueError("Checkpoint cannot move backwards")
         if self._observation_finished:
             return
-        self.queue.schedule(time_s, "serving_checkpoint", priority=90)
+        if time_s != self._observation_end_s:
+            self.queue.schedule(time_s, "serving_checkpoint", priority=90)
         while True:
             result = self.step()
             if result is None or result == (time_s, "serving_checkpoint"):
@@ -591,4 +621,7 @@ class ServingSimulator:
             result["handover"] = self.handover.results()
         if self._driver.generated:
             result["workload"] = self._driver.evaluation_workload(self.runtime)
+        if self.handover is not None:
+            from .evaluation import evaluate_serving
+            result["evaluation"] = evaluate_serving(result)
         return result

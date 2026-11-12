@@ -2,6 +2,7 @@
 from dataclasses import dataclass, field
 from copy import deepcopy
 from fractions import Fraction
+import math
 
 
 @dataclass
@@ -17,7 +18,6 @@ class HandoverState:
     source_edge_id: str | None = None
     target_edge_id: str | None = None
     changes: list = field(default_factory=list)
-    draining_delayed: set = field(default_factory=set)
 
 
 class HandoverRuntime:
@@ -79,7 +79,6 @@ class HandoverRuntime:
         if not state.active or not pending:
             return
         if state.draining:
-            state.draining_delayed.add(pending[0].check_index)
             return
         now = host.time_s
         if state.last_actual_at == now or sid in host._prompt_active or sid in host._downlink_busy:
@@ -113,6 +112,7 @@ class HandoverRuntime:
         record = dict(event="handover_start", time_s=now, session_id=sid,
                       check_index=move.check_index, planned_at=move.planned_at,
                       source_edge_id=move.source_edge_id, target_edge_id=move.target_edge_id,
+                      handover_delay_s=round(now - move.planned_at, 12),
                       old_token_ids=[t.token_id for t in state.old_tokens],
                       drain_end_s=None, drain_duration_s=None)
         state.changes.append(record)
@@ -165,14 +165,63 @@ class HandoverRuntime:
         self._scheduled.pop(sid, None)
 
     def results(self):
+        # Offline event join: every accepted edge, including non-head Pending,
+        # overlaps the actual drain intervals while it still awaits execution.
+        # Never attribute prompt/radio/cooldown-only waiting to Draining.
+        moves = []
+        starts = {(s.session_id, c['check_index']): c
+                  for s in self.sessions.values() for c in s.changes}
+        ended = {e['session_id']: e['time_s'] for e in self.host.mobility.events
+                 if e['event'] == 'mobility_session_end'}
+        for e in self.host.mobility.events:
+            if e['event'] != 'mobility_pending_added':
+                continue
+            sid = e['session_id']
+            actual = starts.get((sid, e['check_index']))
+            until = actual['time_s'] if actual else ended.get(sid, self.host.time_s)
+            overlaps = []
+            for c in self.sessions[sid].changes:
+                lo = max(e['planned_at'], c['time_s'])
+                hi = min(until, c['drain_end_s'] if c['drain_end_s'] is not None else self.host.time_s)
+                if hi > lo:
+                    overlaps.append(dict(start_s=lo, end_s=hi))
+            moves.append(dict(session_id=sid, check_index=e['check_index'],
+                              move_id=f"{sid}:{e['check_index']}",
+                              source_edge_id=e['source_edge_id'], target_edge_id=e['target_edge_id'],
+                              planned_at=e['planned_at'],
+                              actual_handover_time_s=actual['time_s'] if actual else None,
+                              handover_delay_s=actual['handover_delay_s'] if actual else None,
+                              status='completed' if actual else 'cancelled' if sid in ended else 'pending',
+                              first_draining_blocked_at=overlaps[0]['start_s'] if overlaps else None,
+                              draining_wait_intervals=overlaps,
+                              draining_wait_s=round(sum(i['end_s']-i['start_s'] for i in overlaps), 12)))
+        changes = list(starts.values())
+        def metrics(values, name, minimum=False):
+            values = sorted(values)
+            out = {f'mean_{name}_s': sum(values)/len(values) if values else None,
+                   f'p95_{name}_s': values[math.ceil(.95*len(values))-1] if values else None,
+                   f'max_{name}_s': max(values, default=None)}
+            if minimum:
+                out[f'min_{name}_s'] = min(values, default=None)
+            return out
+        delayed = [r for r in moves if r['draining_wait_s'] > 0]
+        summary = dict(completed_handover_count=len(changes),
+                       completed_draining_count=sum(c['drain_end_s'] is not None for c in changes),
+                       incomplete_draining_count=sum(c['drain_end_s'] is None for c in changes),
+                       pending_move_count=sum(r['status']=='pending' for r in moves),
+                       cancelled_move_count=sum(r['status']=='cancelled' for r in moves),
+                       draining_delayed_moves=len(delayed),
+                       draining_wait_scope='all positive observed overlaps, including pending/cancelled; nearest-rank p95',
+                       **metrics([c['handover_delay_s'] for c in changes], 'handover_delay', True),
+                       **metrics([c['drain_duration_s'] for c in changes if c['drain_end_s'] is not None], 'draining_duration'),
+                       **metrics([r['draining_wait_s'] for r in delayed], 'draining_wait'))
         intervals = [round(b["time_s"] - a["time_s"], 12) for s in self.sessions.values()
                      for a, b in zip(s.changes, s.changes[1:])]
-        return dict(summary=dict(actual_handovers=sum(len(s.changes) for s in self.sessions.values()),
-                                 draining_delayed_moves=sum(len(s.draining_delayed) for s in self.sessions.values()),
+        return dict(summary=dict(**summary, actual_handovers=sum(len(s.changes) for s in self.sessions.values()),
                                  min_actual_move_interval_s=min(intervals, default=None)),
                     sessions=[dict(session_id=s.session_id, draining=s.draining, active=s.active,
                                    last_actual_at=s.last_actual_at,
                                    buffered_token_ids=[t.token_id for t in s.buffered],
                                    observed_unfinished_drain_s=round(self.host.time_s-s.last_actual_at,12)
                                    if s.draining else None)
-                              for _,s in sorted(self.sessions.items())], events=deepcopy(self.events))
+                              for _,s in sorted(self.sessions.items())], events=deepcopy(self.events), moves=moves)

@@ -134,9 +134,14 @@ class HandoverTests(unittest.TestCase):
         c["network"]["wireless_down_bits_per_second"]=8
         out=ServingSimulator(c).run()
         starts=[e for e in out["handover"]["events"] if e["event"]=="handover_start"]
-        self.assertEqual([e["time_s"] for e in starts],[.2,1.4])
-        self.assertEqual(starts[1]["drain_end_s"],6.5)
-        self.assertEqual([t["received_at"] for t in out["output_tokens"]],[1.4,2.5,3.5,4.5,5.5,6.5])
+        # B.3 step4 precedes a NEW radio start: at .4 move2 freezes Token1.
+        # Forward .4-.5, UE .5-1.5; next five old Tokens wire1.5-2.0,
+        # extra-forward2.0-2.5, radio starts2.1 and drains through7.1.
+        self.assertEqual([e["time_s"] for e in starts],[.2,.4,1.5])
+        self.assertEqual(starts[-1]["drain_end_s"],7.1)
+        self.assertEqual([t["received_at"] for t in out["output_tokens"]],[1.5,3.1,4.1,5.1,6.1,7.1])
+        self.assertEqual(out["summary"]["gpu_work"],7)
+        self.assertEqual(sum(f['transferred_bytes'] for f in out['network_flows'] if f['flow_type']=='handover'),6)
         self.assertGreater(out["handover"]["summary"]["draining_delayed_moves"],0)
         self.assertEqual(out["turns"][0]["generation_ended_at"],.9)
         flows={f["flow_id"]:f for f in out["network_flows"]}
