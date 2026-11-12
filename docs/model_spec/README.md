@@ -1,97 +1,91 @@
 # 当前正式建模与历史材料索引
 
-当前（2026-11-11）：已增加 Poisson Session 私有工作负载、独立到达/观察窗口、确定性独立随机流、严格模型输出上限一致性、当前状态 DTO 隔离、可配置最小移动间隔，以及显式启用的 III.B.3 Actual Handover/Draining。原静态/S3-A 计划模式保留。Migration Admission Guard 仅限制单 Session 单在途准入，不是 KV Copy/Cutover。具体接口见 ARCHITECTURE；数学正文及优化目标未改，仍以用户确定的完整 Turn E2E 与迁移开销加权方向为准。
+更新：2026-11-12。S0、S1、S2、S3-A Mobility、S3-B Handover、S3-C Integration 已完成，本轮收尾后冻结 S3；S4 KV Live Migration 尚未设计、尚未实现，S5 Joint Re-placement 未开始。当前接口、测试和复现入口见 [ARCHITECTURE](../ARCHITECTURE.md)，发布规则见 [REPOSITORY_FILES](../REPOSITORY_FILES.md)。阶段报告、旧命令和历史运行结果不是测试依赖。
 
-当前 S3-A（2026-11-10）：已实现 Section III.B.3 式(5)/(5a)/(5b) 的到达相对固定移动检查、按需确定性 Markov 计划、Pending FIFO、生命周期清理与有限 T_obs，接入真实 ServingSimulator。实际 Access/Execution、权威 KV、Token 来源和 Flow 路径不变。实际 Handover/Draining 留 S3-B，完整 S3 集成留 S3-C，不能宣称整个 B.3 已完成。最新优化方向是时延与 Overhead 的加权联合优化；本轮不实现目标函数或策略，旧版仅时延表述不作为新优化开发依据。原始数学建模正文未修改。
+## 权威顺序与当前覆盖
 
-当前复现入口见 [ARCHITECTURE](../ARCHITECTURE.md)，文件发布规则见 [REPOSITORY_FILES](../REPOSITORY_FILES.md)。
-下列阶段历史报告保留在 Windows 本地，不是运行或测试依赖。原始模型正文保持原字节。
+1. 用户最新任务与本索引登记的覆盖优先：无 Session H/L、GPU 抢占或旧 R2A 选择器；模型在 Admission 配置绑定；在线只使用当前和历史信息；禁止任何 per-Turn Access 配置。完整计划、未来 Turn/输出/移动、观察终点和事件队列不进入在线 Observation。
+2. **优化目标采用 [2026-11-07 加权 Section III.E 原稿](2026-11-07-weighted/Section_III_E_Problem_Formulation_加权时延与开销_精简修订稿_2026-11-07.md)。** 它替代 2026-11-06 E 节及历史材料中“仅最小时延、开销只作辅助”的目标文字，也覆盖旧 A 节概述中的对应表述。此前将完成者子集均值称为 G1 的口径已撤销。
+3. 资源、网络、Mobility、Handover 与状态安全机制继续采用 [2026-11-06 含可达性补充的主文 A–D](2026-11-06-reachability/Section_III_完整中文系统建模_最终核查修订版.md)，并应用上述用户覆盖。主文的迁移描述是未来研究机制，不表示代码已实现 S4。
+4. [开发建模注意.md](开发建模注意.md) 保留为分阶段开发规范和历史来源；其旧阶段进度、逐轮 Access、旧兼容接口及服务器操作建议服从本索引和用户最新限制，不构成本地代理执行远程/Git 操作的授权。
+5. 各版本的公式依据表和一致性检查报告只作辅助核对，不能证明当前实现完成或测试通过。其余旧文档按下方历史索引使用。
 
-当前S2-C（2026-11-08）：正式默认无权Max-Min Progressive Filling已接入共享网络；直接依据同一主文B.2，复用S2-A/Flow/通知/无线，保留整个固定路径占用与精确残余容量。
-旧S2-B默认共享拒绝规则已由显式Disjoint历史测试替代；S3/S4实际移动和迁移仍未实现。当前报告：`../S2-C_MaxMin动态带宽分配与综合Serving实现报告.md`（仅本地阶段档案）。
+## 当前目标与完整交付口径
 
-2026-11-08：当前阶段S2-B，在S2-A唯一拓扑上实现有线Flow和独立无线字节推进，接入固定远程Serving。仍以2026-11-06 B.1/B.2字节公式/B.3通用流水规则为准；Max-Min留S2-C，Handover留S3，迁移留S4。
-共享有向Link的并发默认明确拒绝；不得恢复历史一次均分、逐Turn移动、优先级或抢占。当前报告：`../S2-B_网络Flow与字节推进实现报告.md`（仅本地阶段档案）。
+令 `Q_all` 为共同外生工作负载中的全部计划合法 Turn。完整 Turn E2E 为真实完整接收时刻减提交时刻：
 
-2026-11-07：当前阶段S2-A，只实现静态Area/有向Link/固定Path及初始化可达性预检。依据仍为2026-11-06可达性补充主文B.1，其中g_r保留为非服务边界。
-正式复用现有EdgeState，不改S1语义，不实现Flow/Byte推进/Max-Min/Markov/Handover。预检仅对显式允许Serving组合与可能移动转移；不推测全Edge笛卡尔积。
-当前实现报告：`../S2-A_网络拓扑建模与实现报告.md`（仅本地阶段档案）。
+\[
+D_q^{\mathrm{E2E}}=t_q^{\mathrm{recv}}-t_q^{\mathrm{sub}}.
+\]
 
-2026-11-06：S1最终清理要求优先于下方历史S1-E接口描述。
+它覆盖实际 Prompt 上传/转发、GPU 等待与计算、KVBlocked、响应交付、Handover 接续和未来迁移冻结等待；计算与流式传输可能重叠，不能直接累加阶段时长。合法零输出按合法零载荷结束事件完成。
 
-当前代码只使用canonical子包；旧根目录转发模块已删除。任何per-Turn Access配置加载即拒绝，不再保留兼容映射。
-Turn结果仅用submitted_access_edge_id；交付必须显式token_id。Session初始/当前Access与Token生成来源保持独立。
-固定模型在Admission配置绑定，禁止H/L、抢占、旧R2A选择逻辑；在线不得查看未来Turn/输出/移动。
+仅在全部计划合法 Turn 均有真实完整交付时刻时，计算
 
-当前主文：[2026-11-06含可达性补充](2026-11-06-reachability/Section_III_完整中文系统建模_最终核查修订版.md)。
-完整清理与验收：`../S1_cleanup_report.md`（仅本地阶段档案）。
-`开发建模注意.md`及下列版本记录保留原阶段历史；其中逐轮移动、兼容接口、服务器操作建议等与用户当前要求冲突的条款不执行。
-未来Mobility按独立固定秒级检查和邻接Markov产生，可在Turn内合法Handover；S1不实现该运行机制。
+\[
+\overline D^{\mathrm{E2E}}=\frac{1}{|Q_{\mathrm{all}}|}
+\sum_{q\in Q_{\mathrm{all}}}D_q^{\mathrm{E2E}}.
+\]
 
----
+**G1 对应 `mean_full_turn_e2e_s`，使用全量计划合法 Turn 分母；未全部完成或空负载时为 null。** `mean_completed_full_turn_e2e_s` 和完成者 P95 仅供诊断，不能替代主目标。未完成运行须分别报告完成率、未完成/未提交数量、KVBlocked、删失时长和原因；不能赋零、伪造完成或按各算法结果删去困难样本。完整交付子集是目标定义域，不能据此强制恢复。
 
-以下为S1-E阶段登记档案（兼容映射/旧入口描述已被本轮清理取代）：
+当前联合优化方向为
 
-# 当前建模依据与用户覆盖说明
+\[
+\min_{\pi\in\Pi_{\mathrm{safe,full}}}
+\mathbb E_{\omega}\left[
+\omega_1\overline D^{\mathrm{E2E}}(\pi;\omega)
++\omega_2 C(\pi;\omega)\right],
+\]
 
-更新日期：2026-11-06。历史整合稿保留，当前优先使用下述新版及用户覆盖。
+\[
+C=\beta_{\mathrm{mig}}V^{\mathrm{mig}}
++\beta_{\mathrm{sh}}A^{\mathrm{shadow}}
++\beta_{\mathrm{HO}}V^{\mathrm{HO}}.
+\]
 
-## 2026-11-06 新版与 S1-E 覆盖
+- `V_mig`：实际逻辑 KV Copy Byte；`A_shadow`：已物化 Shadow KV 的累计 Byte·s；`V_HO`：额外普通响应转发阶段实际推进的逻辑 Byte。
+- 三项独立输出，保留失败/取消前成本和观察截止前的部分传输；不按有线路径跳数重复计量，不把未物化承诺当 Shadow，不重复叠加已经进入 E2E 的竞争/冻结时长。
+- `ω1`、`ω2`、各 `β` 和单位折算尺度尚未确定；不设默认权重、正式归一化或综合分数。当前 S3 没有实际 KV Copy/Shadow，对应开销如实为零，并标明 S4 未实现。
+- 正式算法比较复用同一外生 WorkloadPlan、Markov 移动输入和共同 Seed 集合；实际 Handover 时刻可因保护/服务过程而不同。随机测试 PASS 仅验证实现，不代表策略性能或统计显著性。
 
-用户最新 S1-E 任务优先：只做必要实体补充和 S1 审计，不实现网络、移动、迁移。
-新版仍有历史 H/L、抢占及 R2A 内部模型选择器文字；这些全部排除，不能恢复。
-固定模型由配置入场绑定；未来输出/Turn/移动计划不得进入在线观察。
+## 实现与阶段边界
 
-两份用户桌面 ZIP 的 Markdown 按原字节保留，未修改论文：
+| 阶段 | 当前状态与机制 |
+|---|---|
+| S0 | 完成；保留单 Session 生命周期、安全和手算回归 |
+| S1 | 完成；canonical core/resources/simulation/demos，Turn 级 GPU 名额/FCFS/Equal-Share、累计 Context、原子 KV 提交/阻塞/恢复、零 Idle、完整 E2E |
+| S2 | 完成；唯一 NetworkTopology、固定有向路径、真实 Flow/Byte 推进、无权 Max-Min、独立无线 FIFO、固定远程 Serving |
+| S3-A Mobility | 完成；私有到达相对 Markov 计划、Pending FIFO、有限 T_obs 和生命周期取消，计划模式不改实际 Access/Execution |
+| S3-B Handover | 完成；显式启用实际 Access 切换、Prompt/无线 Token 保护与串行 Draining；Execution/权威 KV/已生成 Token 来源不变 |
+| S3-C Integration | 完成；统一事件链、共享资源/Token/Byte 审计与离线评价；本轮收尾后冻结 S3 |
+| S4 KV Live Migration | 尚未设计、尚未实现；现有 MigrationAdmissionGuard 只是单 Session 固定 Source/Target 准入租约 |
+| S5 Joint Re-placement | 未开始 |
 
-- `2026-11-06-final/`：最终小问题修订与全量复核包。
-- `2026-11-06-reachability/`：网络可达性补充包；其主文比前者只进一步补充
-  移动后允许 Access/原权威 Execution 组合的双向路径预检，当前采用此更完整主文。
+完整 unittest 保留固定回归、独立 Oracle 与边界检查，并默认运行 50 个合法随机场景；未指定 `SESSION_TEST_SEED` 时产生新 Master Seed，指定后稳定复现。`SESSION_TEST_CASES` 默认 50，扩展验证至少 500；记录 Master/Case Seed、失败配置与复现命令，失败不得忽略或换 Seed。测试不依赖预先存在的 `runs/`、历史结果或执行顺序。
 
-新版 B.3/C.1 明确独立秒级移动检查、邻接 Markov、Turn 内合法 Handover、
-原 Token 来源/路径保留、计划与实际 Access 分离、零 Idle。
-S1-E 只提供静态 Area 归属、初始/提交 Access 快照、冻结输出 Token 身份与真实生成归属；
-S2 再接入 Area 注册表/有向网络及可达性验证，S3 再实现独立私有移动过程与受控切换。
-不能用直接修改位置字段代替 Handover，不能把旧 per-Turn Access 配置当作新版移动。
+## 原稿来源、完整性与交叉引用
 
-正式 TurnPlan 只含 input_tokens/hidden_output_tokens；旧 JSON Access 值私有隔离，
-在对应 Turn 揭示时验证固定接入，否则明确拒绝。不会提前暴露未来 Access。
-S1-E 完整审计见 `../S1-E_最终建模一致性审计报告.md`，原报告保留为阶段历史。
+新 E 原稿从用户本机 `C:/Users/71968/Desktop/Section_III_E_Problem_Formulation_加权时延与开销_精简修订稿_2026-11-07.md` 按原始字节复制。任务所写文件名带 `(1)`，实际找到的原稿不带该后缀；未伪造或改写正文。
 
-## 采用顺序
+```text
+7257 bytes
+SHA-256 1c3865b71f4415fe36c2e7fe9e74c5be23153d66bfa09cac382faa30dd993290
+```
 
-1. 用户最新 Foundation 任务及本目录 `开发建模注意.md` 为执行规范：**删除 Session 优先级及 GPU 抢占；隔离未来负载；按事件检查真实 Token**。规范由桌面 `说明文档/开发建模注意.md` 按原字节复制；其中服务器上传建议不构成本地代理的执行授权。
-2. 当前主文为上述 `2026-11-06-reachability/` 修订版。本目录
-   `Stateful_AI_Session_Re-placement_Section_III_完整中文系统建模.md`
-   为保留的历史整合稿，来自用户提供的
-   `C:/Users/71968/Desktop/Section_III_完整整合与核查_2026-11-03.zip`。
-3. 同包的公式依据核对表和最终一致性检查报告作为辅助资料，不视为代码已经实现或测试通过的证明。
-4. 用户提供的 `C:/Users/71968/Desktop/建模文档.zip` 为旧版分节参考；
-   与完整整合稿冲突时，以完整整合稿及用户最新要求为准。
+新 E 使用独立编号 (14)–(20)，并引用 D(12)/(13)；现有完整主文对应尾部准入/原子切换为 D(29)/(31)，完整 E2E 为 C(22)。这是来源版本的编号不一致，当前按章节语义对照，保留原稿并待论文合稿时统一，不据此改动资源数学模型。两份 2026-11-06 完整主文只在 E 标题后新增过时标记，A–D 与其余原文保持原字节。
 
-三个源 Markdown 按 ZIP 内原始字节复制，未修改论文正文。原文中的 H/L 属性、
-C.4 抢占与恢复、式(20)、高低优先级队列及分组指标等相关表述不构成当前实现要求。
-当前 S1-A 的事件 priority 数值用于同刻事件排序，不表示 Session 优先级。
-Foundation 已删除 S0 历史 H/L 字段及合法值检查；旧配置含该字段时明确拒绝迁移，不能重新启用服务优先级。
+## 历史材料索引
 
-## 当前实现与模型的对应
+| 路径 / 材料 | 性质与适用范围 |
+|---|---|
+| `2026-11-06-reachability/` | 当前 A–D 资源/安全依据；E 已被新稿替代。主文补充移动后 Access/原 Execution 双向可达性预检 |
+| `2026-11-06-final/` | 前一版整合稿及核对附件；E 已过时，可达性采用上项补充 |
+| `Stateful_AI_Session_Re-placement_Section_III_完整中文系统建模.md` 及同目录核对表/报告 | 2026-11-03 整合历史来源，来自用户桌面 `Section_III_完整整合与核查_2026-11-03.zip`；旧优先级/抢占/仅时延文字均不覆盖当前规范 |
+| `开发建模注意.md` 中 S1–S7 路线、旧阶段记录与本地阶段报告 | 开发历史和来源；旧阶段状态、逐轮移动、根转发兼容及同步命令均不能作为当前接口规则 |
+| `docs/` 下 S1/S2/S3 阶段审计、上传清单；`runs/` 历史结果 | 只在本地保留，不批量重写，不作为运行或测试依赖；正式 fixture `docs/s1d_verification.json` 特例保留 |
 
-- S0：单 Session 的输入上传、逐 Token Prefill/Decode、累计 Context/KV、流式下行、完整 Turn E2E 和自然结束释放。
-- S1-A：对应 C.3 的动态等权共享和累计服务守恒（主要是式(17)–(18)），支持通用 eq-work 任务。
-- Foundation：结构派生 ModelSpec、固定绑定 SessionState、已揭示 TurnState、EdgeState、GPUComputeTask、私有 WorkloadPlan/Driver、白名单 OnlineObservation。S0 已改用这些实体和原 GPUQueue。
-- S1-C0 已整理为 core/resources/simulation/demos 子包，原路径为轻量兼容入口；RuntimeState 在 core/runtime.py，实体定义仍唯一。
-- S1-C1 的 KVResource 统一原子 Token/Context/KV 提交、保留 PendingCommit、阻塞计时、自然释放及确定性释放事件重试。使用原 GPU 已完成单元，不取消或重算。GPU 完成不等于合法 Token 提交或完整 Turn 交付。
-- S1-B：已实现独立 L_e 运行名额、按实际 Ready 时间和稳定提交顺序的 FCFS 队列、Ready/Start/Completion 时间与等待时间；复用 S1-A 工作量和事件预测。
-- S1-D 已实现统一多 Session、多 Turn、无线上传/流式下行、KV 恢复与完整 E2E。最高约束：运行名额按 Turn 计，连续 Token 保留同一 GPUQueue 资格；结束计算或 KVBlocked 才释放。底层原子任务模式仅保留给历史组件接口。
-- 尚未实现有线 Max-Min、移动、迁移与策略；S1-D 固定 Access=Execution，S1-E 已补充实体语义并完成本地总体验收。S1-C 原演示保留为历史脚本化资源验收，正式统一执行位于 simulation/serving.py。
-- S1-B 依据用户最新开发任务仅实现名额和 FCFS；不因原稿保留优先级规则而扩展任务范围。净显存约束明确留到 S1-C。
-- GPU 运行名额释放不等于 Session KV 释放；后者须遵循模型生命周期。
-
-模型核查报告保留的边界同样保留：未全部完成时不伪造全量平均 E2E；
-切换前后同 Turn 响应在新版中按 FIFO 串行批段取得唯一活动有线公平份额，需在 S2/S3 实现。
-当前阶段不自行补充算法或更改建模。
-
-## 完整性记录（SHA-256）
+2026-11-03 三份历史 Markdown 原始 SHA-256 保留如下；本轮不修改这些文件：
 
 ```text
 09703aa449639012986b92a8a57cdd7472af770f9b8daadfc281f93a9afa8440  Stateful_AI_Session_Re-placement_Section_III_完整中文系统建模.md

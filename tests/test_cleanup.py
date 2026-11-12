@@ -5,7 +5,8 @@ import json
 from pathlib import Path
 import sys
 import unittest
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
 from replacement.simulation.serving import ServingSimulator
 from replacement.simulation.s0 import S0Simulator
 from test_serving import config
@@ -19,7 +20,7 @@ class CleanupTests(unittest.TestCase):
                 ServingSimulator(c)
 
     def test_s0_future_turn_access_rejected_at_loading(self):
-        c = json.loads(Path("configs/s0_smoke.json").read_text(encoding="utf8"))
+        c = json.loads((ROOT / "configs/s0_smoke.json").read_text(encoding="utf8"))
         c["session"]["turns"][-1]["access_edge_id"] = c["session"]["access_edge_id"]
         with self.assertRaises(ValueError):
             S0Simulator(c)

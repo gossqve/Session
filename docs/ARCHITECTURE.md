@@ -1,15 +1,22 @@
-# S0–S3-A reproduction and architecture
+# S0–S3 reproduction and architecture
+
+S0, S1, S2, S3-A Mobility, S3-B Handover and S3-C Integration are complete.
+S3 freezes after the 2026-11-12 closing round. S4 KV Live Migration is not yet
+designed or implemented; S5 Joint Re-placement has not started.
 
 Python 3.10+, standard library. Run from repository root:
 
 ```powershell
 python -m unittest discover -s tests -v
 python scripts/verify_s2c.py
+python scripts/verify_s3b.py
+python scripts/verify_s3c.py
 ```
 
-The second command executes exact Oracle comparisons, dynamic/shared Serving,
-the full suite and earlier verifiers. It creates new `runs/s2c_*`, `runs/s2b_*`
-and `runs/s1e_*` output directories. No prior run is required.
+Stage verifiers include exact Oracle comparisons, shared Serving and earlier
+regressions. Writers create fresh output directories themselves. Tests use
+isolated system temporary directories; no pre-existing `runs/` or prior result
+is required. Fixed regressions and random validation both run in full unittest.
 
 ## Authoritative inputs
 
@@ -21,8 +28,10 @@ directories that the verifier opens. Keep its contents and path stable.
 All other stage verification JSON/logs are optional local history.
 
 The current model is indexed by [model_spec/README.md](model_spec/README.md).
-Original model Markdown is preserved; explicit user overrides exclude priorities,
-preemption, old model selectors and per-Turn Access plans.
+The 2026-11-07 original E revision defines the weighted objective and supersedes
+the old E latency-only objective. The 2026-11-06 A–D bytes remain unchanged;
+explicit user overrides exclude priorities, preemption, old model selectors and
+per-Turn Access plans. Historical statements do not override the current index.
 
 ## Canonical modules and ownership
 
@@ -37,6 +46,11 @@ preemption, old model selectors and per-Turn Access plans.
   WirelessRuntime uses the same Byte kernel with independent Session/direction rates.
 - `simulation/events.py`: single event queue; `simulation/serving.py`: formal
   multi-Session/Turn executor; `simulation/s0.py`: retained lifecycle/safety fixture.
+- `simulation/mobility.py`: private Markov/Pending process;
+  `simulation/handover.py`: actual Access changes and protected serial Draining;
+  `simulation/evaluation.py`: offline completion, censoring and raw overhead.
+- `simulation/migration_guard.py`: one fixed Source/Target admission lease per
+  Session; no KV Copy, Shadow, STOP or Cutover implementation.
 - `demos/` and `replacement.cli`: implemented CLI entry points, no root forwarding
   modules. All demo inputs are supplied from `configs/`.
 
@@ -54,6 +68,29 @@ The default MaxMinAllocator accounts for all links on frozen flows' paths and
 recovers residual capacity. DisjointPathAllocator is an explicit historical guard.
 Wireless remains outside wired sharing. Units: eq-work/s, bit/s, Byte, seconds.
 
+```mermaid
+flowchart TD
+    A[Session Arrival: private WorkloadPlan] --> B[Admission: fixed model and Execution]
+    B --> C[Turn Serving: actual Access snapshot]
+    C --> D[Prompt wireless then optional wired forwarding]
+    D --> E[GPU FCFS / Equal-Share and atomic KV commit]
+    E --> F[Persistent response Flow then wireless FIFO]
+    M[Private Mobility checks] --> P[Pending FIFO]
+    P --> H[Protected Access Handover]
+    F --> H
+    H --> R[Old response forwarding and serial Draining]
+    R --> F
+    F --> T[Full UE delivery / Turn Completion]
+    T --> C
+    T --> V[Offline Evaluation]
+```
+
+The Access Edge terminates UE radio traffic; the Execution Edge computes and
+owns the unique authoritative KV. Handover changes Access and resumes response
+delivery through real forwarding Flows. Execution and KV stay fixed throughout
+S3. Future S4 execution migration is a separate mechanism requiring real copying
+and safe Cutover. A plan or admission lease cannot perform that change.
+
 ## Scripts and artifacts
 
 `verify_s1e.py`, `verify_s2b.py`, `verify_s2c.py` are reproducible acceptance
@@ -65,9 +102,9 @@ Simulation results include Flow/Link rate and utilization traces, G/Y Byte
 progress, Token/Turn/Session records, GPU/KV records and offline config copies.
 These are outputs under `runs/`; they are not test inputs or publishable source.
 
-S3-A planned-only Markov/Pending is described below. Opt-in S3-B actual Handover/Draining
-is described in the dated Poisson section. S3-C full formal integration, S4
-migration/Shadow/Cutover and later policies remain future work.
+S3-A planned-only Markov/Pending and opt-in S3-B actual Handover/Draining are
+described below; S3-C integration is complete. S4 migration/Shadow/Cutover and
+later policies are outside the implemented system.
 No performance claim for real hardware or model weights is made.
 
 ## S3-A Mobility Workload and Pending State
@@ -86,12 +123,13 @@ Draw format is compact UTF-8 JSON `[seed,session_id,check_index]`; SHA-256 first
 8 bytes in big-endian order divided by 2**64. Sorted Edge IDs and previous planned
 row determine the next plan. Only one next check is scheduled. Events contain only
 already-experienced checks and edges. Pending preserves all adjacent edges FIFO;
-self transitions do not enqueue. It is not consumed in this stage.
+self transitions do not enqueue. Planned-only mode does not consume Pending;
+opt-in actual Handover consumes it under the S3-B protection rules.
 
 GPU20/KV25/Serving30/transport50 precede mobility80 and checkpoint90. Mobility-only
 planning does not change rates/activity or inspect partial work; resources keep
 lazy exact settlement at original service events/checkpoints, preserving all core
-traces. Actual Handover will need affected-resource settlement in S3-B. Every
+traces. S3-B settles affected resources before actual Handover changes. Every
 Serving Session end path notifies MobilityRuntime; logical invalidation skips old
 checks before the clock advances. End clears Pending with cancellation counters,
 retaining history. KVBlocked alone does not end the Session. max_pending_depth is
@@ -101,14 +139,17 @@ Mobility run() uses advance_to(T_obs); boundary checks are included unless Sessi
 termination at that instant wins. Unfinished Sessions and Pending remain real.
 T_obs, future turns, probabilities and random seed are absent from OnlineObservation.
 Without mobility, existing run(), result schema and resource behavior are unchanged.
-Stage is S1-D without topology, S2-C with topology, S3-A with enabled mobility.
+Runtime stage labels remain S1-D without topology, S2-C with topology,
+S3-A with planned-only mobility and S3-B with enabled actual Handover;
+S3-C names the integration acceptance stage.
 
 S3-A results append only `mobility={summary,sessions,events}`; CLI --out additionally
 writes mobility.json. Aggregate summary fields: mobility_checks, planned_access_changes,
 pending_moves_added/cancelled, max_pending_depth, pending_moves_at_observation_end.
 Per-Session rows distinguish initial/planned/actual Access and fixed Execution.
 No Actual Handover completion record, new objective function or optimization exists.
-User's latest objective direction is weighted latency and Overhead, reserved for later stages.
+The current objective is weighted latency and Overhead; current execution reports
+raw components without inventing weights or implementing an optimization policy.
 
 ```powershell
 python -m unittest discover -s tests -p test_mobility.py -v
@@ -241,17 +282,61 @@ right-censored E2E lower bounds only for still-live Turns (terminated failures
 are separate), and actual HANDOVER Flow Y Byte independently of original response
 and wireless Byte. `p95_full_turn_e2e_s` in this evaluation explicitly describes
 the normally completed subset, not a full-population estimate. Original summary
-fields retain their canonical names, values and stage labels. The formal G1 metric
-is `evaluation.summary.mean_completed_full_turn_e2e_s`: sum actual normal completed
-Turn delays divided by their count, including legal zero-output completion; null
-only when that count is zero. It uses the same completed subset as P95. Completion
-rate, censoring bounds, terminated and unsubmitted Turns remain separately reported.
-The old `mean_full_turn_e2e_s` stays null unless all planned Turns complete normally;
-it is a legacy complete-data diagnostic and must not be used for G1. `g1_metric`
-and explicit scope fields identify these semantics. GPU busy time sums active Edge
-seconds; running Turn time integrates active Turn counts. These are raw metrics,
-not an objective function. Evaluation is never included in online DTOs.
+fields retain canonical stage labels. G1 is `mean_full_turn_e2e_s`: sum full E2E
+over ALL planned legal Turns divided by their count, only after every such Turn
+has genuinely completed (including legal zero-output completion). It is null for
+an incomplete or empty workload. `mean_completed_full_turn_e2e_s` is a diagnostic
+over the normally completed subset; it cannot replace G1. Completion rate,
+unfinished/terminated/unsubmitted counts, KVBlocked, censoring durations and
+reasons remain separate. `g1_metric` and scope fields identify the full-planned
+semantics. GPU busy time sums active Edge seconds; running Turn time integrates
+active Turn counts. Evaluation is never included in online DTOs.
+
+The current objective from 2026-11-07 E is
+`ω1·D̄_E2E + ω2·(β_mig·V_mig + β_sh·A_shadow + β_HO·V_HO)`.
+Raw `V_mig` (logical KV Copy Byte), `A_shadow` (materialized Shadow Byte·s) and
+`V_HO` (extra ordinary response-forwarding Byte) are independent counters. Count
+actual transferred Byte, including partial transfer at cutoff and sunk overhead
+before cancellation/failure; do not multiply by path hops. Unmaterialized capacity
+promises are not Shadow, and E2E already includes transmission competition and
+freeze waits. S3 has no real KV Copy/Shadow, so their actual values are zero.
+Weights, conversion coefficients and unit scales remain unset; there is no
+default weighting, normalization or aggregate score.
 
 S4 KV Copy/Shadow/STOP/Cutover, joint Check scheduling and Re-placement policies
 remain outside this stage. Actual handover_start events supply the real movement
 trigger record; no policy or migration is inferred from a plan or drain completion.
+
+## Random validation and replay
+
+Full unittest retains deterministic regressions, boundaries and independent
+Oracles and also generates 50 legal scenarios by default. Without
+`SESSION_TEST_SEED`, each run creates a fresh Master Seed; setting it replays the
+same scenario sequence. `SESSION_TEST_CASES` defaults to 50; use at least 500 for
+extended validation. Generation uses local RNG and stable Seed derivation.
+Output includes Master Seed, case count and Case Seeds; failure keeps config and
+replay command and fails the test, without retrying another Seed.
+
+```powershell
+$env:SESSION_TEST_SEED = '12345' # replace with an actual reported Master Seed
+$env:SESSION_TEST_CASES = '50'
+python -m unittest discover -s tests -v
+$env:SESSION_TEST_CASES = '500'
+python -m unittest discover -s tests -v
+Remove-Item Env:SESSION_TEST_SEED, Env:SESSION_TEST_CASES
+```
+
+`tests/test_random_serving.py` is discovered by unittest and reuses the local
+generator/auditor in `tests/random_serving.py`. The standalone extended entry is
+`python scripts/verify_random.py --seed 12345 --cases 500 --out runs/a_new_random_directory`;
+optional `--case-index INDEX` replays an individual case. Failed cases retain
+config, trace and reproduction information under a newly created
+`runs/random_failure_*` directory; success emits Seed/case/digest records.
+
+`python scripts/verify_clean.py --seed 12345 --cases 50 --out runs/a_new_clean_directory`
+performs the clean-source acceptance using the explicit publication whitelist.
+Clean-clone validation runs a separate temporary source copy without `.git`,
+`runs/`, environments or caches, preserving this workspace's historical results.
+Random validation checks correctness and invariants; PASS is not evidence of
+algorithm performance or statistical significance. Formal policy comparisons
+must share the external WorkloadPlan, mobility inputs and common Seed set.

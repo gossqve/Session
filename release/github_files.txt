@@ -114,3 +114,8 @@ tests/test_s3c_integration.py
 tests/test_s3c_evaluation.py
 scripts/verify_s3c.py
 tests/test_s3c_audit.py
+docs/model_spec/2026-11-07-weighted/Section_III_E_Problem_Formulation_加权时延与开销_精简修订稿_2026-11-07.md
+scripts/verify_clean.py
+scripts/verify_random.py
+tests/random_serving.py
+tests/test_random_serving.py

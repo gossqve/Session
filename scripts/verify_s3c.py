@@ -61,12 +61,14 @@ def audit(directory, *, oracle=False):
     expected_mean=sum(completed)/len(completed) if completed and len(completed)==summary['planned_turns'] else None
     if expected_mean is None:assert summary['mean_full_turn_e2e_s'] is None
     else:close(summary['mean_full_turn_e2e_s'],expected_mean)
-    # G1 is independent of the all-planned diagnostic. Derive its oracle from
-    # actual submission/completion events, not from evaluation's own output.
-    assert evaluation['summary']['g1_metric']=='mean_completed_full_turn_e2e_s'
-    g1=math.fsum(completed_event_delays)/len(completed_event_delays) if completed_event_delays else None
-    if g1 is None:assert evaluation['summary']['mean_completed_full_turn_e2e_s'] is None
-    else:close(evaluation['summary']['mean_completed_full_turn_e2e_s'],g1)
+    # New authoritative weighted objective: the full-plan mean is G1; the
+    # completed subset remains an independently checked diagnostic only.
+    assert evaluation['summary']['g1_metric']=='mean_full_turn_e2e_s'
+    assert evaluation['summary']['mean_full_turn_e2e_s']==summary['mean_full_turn_e2e_s']
+    diagnostic=math.fsum(completed_event_delays)/len(completed_event_delays) if completed_event_delays else None
+    if diagnostic is None:assert evaluation['summary']['mean_completed_full_turn_e2e_s'] is None
+    else:close(evaluation['summary']['mean_completed_full_turn_e2e_s'],diagnostic)
+    assert evaluation['summary']['weighted_objective_value'] is None
     assert len(evaluation['active_turn_censoring_lower_bounds'])==evaluation['summary']['right_censored_turns']
     assert len(evaluation['terminated_turns'])==evaluation['summary']['failed_submitted_turns']
     assert evaluation['summary']['unsubmitted_turns']==summary['planned_turns']-len(turns)
@@ -119,6 +121,10 @@ def audit(directory, *, oracle=False):
             assert expected_end==move['drain_end_s']
     overhead=sum(f['transferred_bytes'] for f in flows if f['flow_type']=='handover')
     close(overhead,evaluation['transport']['handover_forward_bytes'])
+    close(overhead,evaluation['resource_overhead']['V_HO'])
+    close(sum(f['transferred_bytes'] for f in flows if f['flow_type']=='kv_copy'),evaluation['resource_overhead']['V_mig'])
+    assert evaluation['resource_overhead']['A_shadow']==0
+    assert evaluation['resource_overhead']['weighted_cost'] is None
     # Stream all per-flow transitions: settle PRIOR Byte using PRIOR rates,
     # including a partial final segment. Never multiply logical Byte by hops.
     def byte_audit(rows,final_rows):

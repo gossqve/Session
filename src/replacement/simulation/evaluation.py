@@ -2,8 +2,8 @@
 
 No runtime references, future plan queries, scheduling, or mutable resource ledger.
 The existing summary and per-resource traces remain the authoritative inputs.
-G1 uses normal completed Turns, including legal zero-output completion. The
-legacy all-planned mean is retained only as a diagnostic, never as G1.
+The 2026-11-07 weighted objective uses the all-planned complete-data mean.
+The completed-only mean is a diagnostic and never substitutes for G1.
 """
 import math
 
@@ -32,9 +32,11 @@ def evaluate_serving(result):
     completed=[t['received_at']-t['submitted_at'] for t in result['turns']
                if t['status']=='completed']
     raw.update(mean_completed_full_turn_e2e_s=round(math.fsum(completed)/len(completed),12) if completed else None,
-               g1_metric='mean_completed_full_turn_e2e_s',
-               g1_scope='normally completed Turns including legal zero-output; excludes unfinished and terminated Turns',
-               mean_full_turn_e2e_scope='legacy all-planned complete-data diagnostic; not G1',
+               g1_metric='mean_full_turn_e2e_s',
+               g1_scope='all planned legal Turns; defined only when all complete normally',
+               mean_full_turn_e2e_scope='main latency component of the 2026-11-07 weighted objective',
+               mean_completed_full_turn_e2e_scope='completed subset diagnostic only; not G1',
+               weighted_objective_value=None,
                unsubmitted_turns=summary['planned_turns']-summary['submitted_turns'],
                submitted_unfinished_turns=len(unfinished),
                right_censored_turns=sum(t['right_censored'] for t in unfinished),
@@ -55,6 +57,11 @@ def evaluate_serving(result):
                    wireless_download_bytes=byte_sum(result['wireless_transfers'],'download'),
                    ue_delivered_response_bytes=sum(t['text_bytes'] for t in result['output_tokens'] if t['delivered']))
     return dict(summary=raw,transport=transport,unfinished_turns=unfinished,
+                resource_overhead=dict(V_mig=byte_sum(result['network_flows'],'kv_copy'),
+                    A_shadow=0.0,V_HO=transport['handover_forward_bytes'],
+                    kv_migration_status='not designed or implemented; S4',
+                    shadow_status='no Shadow objects in S3',
+                    weighted_cost=None,weights_and_unit_scales='not frozen; no defaults'),
                 active_turn_censoring_lower_bounds=[dict(session_id=t['session_id'],turn_index=t['turn_index'],
                     lower_bound_s=t['right_censored_e2e_lower_bound_s']) for t in unfinished if t['right_censored']],
                 terminated_turns=[dict(t) for t in unfinished if not t['right_censored']],

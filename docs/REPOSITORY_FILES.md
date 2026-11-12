@@ -1,4 +1,4 @@
-# S0–S2 文件保留与发布规范
+# S0–S3 文件保留与发布规范
 
 服务器同步与 GitHub 使用逐文件白名单：[server_files.txt](../release/server_files.txt)、
 [github_files.txt](../release/github_files.txt)。两份列表当前内容相同，均为仓库相对路径，
@@ -20,6 +20,12 @@
 
 `docs/model_spec/` 中原始 Markdown 与历史修订一起保留建模出处；当前有效优先级由该目录
 README 说明。模型正文中的旧阶段规则不能覆盖用户最新约束。
+当前优化目标原稿为
+`docs/model_spec/2026-11-07-weighted/Section_III_E_Problem_Formulation_加权时延与开销_精简修订稿_2026-11-07.md`，
+按用户原稿字节保留；2026-11-06 两份完整主文仅在 E 标题后增加过时标记，A–D 未改。
+来源、SHA-256、权威顺序及旧文档历史属性见 [model_spec/README.md](model_spec/README.md)。
+新增正式原稿、随机测试 helper/入口和验收脚本均须逐项审查并补入两份发布白名单；
+只发布显式文件，不包含本地来源目录、失败样例或随机测试输出。
 `docs/s1d_verification.json` 中旧运行目录只是来源字符串，不需要同步那些历史运行目录。
 其余阶段审计 JSON 均不是输入。不要按扩展名一概忽略 JSON，也不要删除真正的测试 fixtures。
 将来新增 fixtures 应显式加入白名单并检查 Git 忽略状态。
@@ -55,3 +61,7 @@ GitHub 提交前将白名单与 `git status --short -uall`、`git ls-files` 和�
 
 复现入口与模块职责见 [ARCHITECTURE.md](ARCHITECTURE.md)。本地阶段报告可供研究审查，
 但正式复现不能要求这些报告、日志、旧 runs 或历史上传清单存在。
+测试临时文件使用各自创建的系统临时目录；CLI 输出由写入模块创建父目录。
+随机失败的配置、Trace、Seed 与复现命令属于本地 `runs/` 诊断产物，不是测试 fixture。
+干净环境验收使用按白名单复制的独立临时副本，排除 `.git`、`runs/`、环境与缓存，
+不删除当前工作区历史结果。S3 本轮收尾后冻结，S4 尚未设计、尚未实现，S5 未开始。

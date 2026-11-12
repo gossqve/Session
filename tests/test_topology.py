@@ -5,7 +5,8 @@ import json
 from pathlib import Path
 import sys
 import unittest
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
 from replacement.core.entities import EdgeState
 from replacement.simulation.events import EventQueue
 from replacement.network.entities import Area, DirectedLink, FixedPath
@@ -148,7 +149,7 @@ class TopologyTests(unittest.TestCase):
         from replacement.demos.topology_demo import run_demo
         from replacement.simulation.serving import ServingSimulator
         from test_serving import config
-        c=json.loads(Path("configs/s2a_topology_smoke.json").read_text(encoding="utf8"))
+        c=json.loads((ROOT / "configs/s2a_topology_smoke.json").read_text(encoding="utf8"))
         sim=ServingSimulator(config());sim.advance_to(0.25);before=sim.observation();events=copy.deepcopy(sim.events)
         a=run_demo(c);b=run_demo(copy.deepcopy(c))
         self.assertEqual(a,b);self.assertEqual(a["summary"]["areas"],3);self.assertEqual(a["summary"]["edges"],6)

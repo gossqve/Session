@@ -1,6 +1,6 @@
 """Negative controls: real CLI artifacts must fail audit after physical corruption.
 
-No permanent fixture or prior run is read. Generated evidence stays local in runs.
+No permanent fixture or prior run is read. Temporary evidence is owned by this class.
 """
 import json
 import os
@@ -19,7 +19,10 @@ from verify_s3c import audit
 class S3CAuditTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.output=Path(tempfile.mkdtemp(prefix='s3c_audit_controls_',dir=ROOT/'runs'))
+        temporary=tempfile.TemporaryDirectory(prefix='s3c_audit_controls_')
+        # unittest runs class cleanups even if the subprocess below fails in setup.
+        cls.addClassCleanup(temporary.cleanup)
+        cls.output=Path(temporary.name)
         cls.valid=cls.output/'valid'
         result=subprocess.run([sys.executable,'-m','replacement.demos.serving_demo','--config','configs/s3c_hand_shared.json','--out',str(cls.valid)],
                               cwd=ROOT,env=dict(os.environ,PYTHONPATH=str(ROOT/'src')),capture_output=True,text=True)
@@ -36,7 +39,7 @@ class S3CAuditTests(unittest.TestCase):
     def test_rejects_full_e2e_not_matching_delivery_events(self):
         self.mutate('summary.json',lambda d:d.update(mean_full_turn_e2e_s=1))
 
-    def test_rejects_g1_mean_not_matching_completed_ue_events(self):
+    def test_rejects_completed_subset_diagnostic_not_matching_ue_events(self):
         self.mutate('evaluation.json',lambda d:d['summary'].update(mean_completed_full_turn_e2e_s=99))
 
     def test_rejects_kv_commit_not_matching_structural_formula(self):
